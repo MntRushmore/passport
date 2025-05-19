@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { PassportCover } from "@/components/passport-cover"
 import { LoginButton } from "@/components/login-button"
+import { Shield, Users, Zap } from "lucide-react"
 
 export default function Home() {
   return (
@@ -20,7 +21,7 @@ export default function Home() {
           <div className="text-center text-sm font-mono text-stone-500 mt-4">
             <p>
               Already logged in?{" "}
-              <Link href="/passport" className="text-navy-700 underline">
+              <Link href="/dashboard" className="text-navy-700 underline">
                 View your passport
               </Link>
             </p>
@@ -38,6 +39,26 @@ export default function Home() {
             <span className="text-2xl">🍟</span>
             <span className="text-2xl">🧋</span>
             <span className="text-2xl">🍦</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-4 rounded-lg border border-gold-500 flex flex-col items-center text-center">
+            <Shield className="h-8 w-8 text-navy-700 mb-2" />
+            <h3 className="font-serif text-navy-700 text-sm mb-1">Secure Authentication</h3>
+            <p className="text-xs font-mono text-stone-600">Sign in securely with your Slack account</p>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border border-gold-500 flex flex-col items-center text-center">
+            <Users className="h-8 w-8 text-navy-700 mb-2" />
+            <h3 className="font-serif text-navy-700 text-sm mb-1">Create Your Club</h3>
+            <p className="text-xs font-mono text-stone-600">Set up your club and invite members</p>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border border-gold-500 flex flex-col items-center text-center">
+            <Zap className="h-8 w-8 text-navy-700 mb-2" />
+            <h3 className="font-serif text-navy-700 text-sm mb-1">Track Progress</h3>
+            <p className="text-xs font-mono text-stone-600">Complete workshops and collect stamps</p>
           </div>
         </div>
       </div>

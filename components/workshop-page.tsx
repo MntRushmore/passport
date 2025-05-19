@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge"
+import { Calendar, MapPin } from "lucide-react"
 
 interface Workshop {
   id: string
@@ -7,7 +8,10 @@ interface Workshop {
   description: string
   completed: boolean
   submissionDate: string | null
-  eventCode?: string // Add this field
+  eventCode?: string
+  difficulty?: "beginner" | "intermediate" | "advanced"
+  duration?: string
+  skills?: string[]
 }
 
 interface WorkshopPageProps {
@@ -15,14 +19,24 @@ interface WorkshopPageProps {
 }
 
 export function WorkshopPage({ workshop }: WorkshopPageProps) {
+  // Add some default values if not provided
+  const difficulty = workshop.difficulty || "beginner"
+  const duration = workshop.duration || "1-2 hours"
+  const skills = workshop.skills || ["Coding", "Design", "Problem Solving"]
+
   return (
     <div className="h-full flex flex-col relative z-[1]">
+      {/* Header */}
       <div className="navy-header p-4 flex items-center justify-between">
-        <h2 className="font-serif text-xl">{workshop.title}</h2>
+        <h2 className="font-serif text-xl flex items-center">
+          <span className="mr-2 text-2xl">{workshop.emoji}</span>
+          {workshop.title}
+        </h2>
         <div className="font-mono text-xs">ID: {workshop.id.toUpperCase()}</div>
       </div>
 
       <div className="p-6 flex-1 flex flex-col">
+        {/* Stamp */}
         <div className="flex justify-between items-start mb-6">
           <div className={`stamp w-24 h-24 text-5xl ${workshop.completed ? "completed" : ""}`}>{workshop.emoji}</div>
 
@@ -37,19 +51,41 @@ export function WorkshopPage({ workshop }: WorkshopPageProps) {
           </div>
         </div>
 
+        {/* Workshop details */}
         <div className="mb-6">
           <h3 className="font-serif text-navy-700 text-lg mb-2">Workshop Details</h3>
           <p className="font-mono text-sm text-stone-700 leading-relaxed">{workshop.description}</p>
 
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="flex items-center">
+              <Calendar className="h-3 w-3 mr-1 text-navy-700" />
+              <span>{duration}</span>
+            </div>
+            <div className="flex items-center">
+              <span className="mr-1 font-bold">Level:</span>
+              <span className="capitalize">{difficulty}</span>
+            </div>
+          </div>
+
+          {/* Skills */}
+          <div className="mt-3 flex flex-wrap gap-1">
+            {skills.map((skill, index) => (
+              <span key={index} className="text-xs font-mono bg-cream px-2 py-0.5 rounded-full border border-gold-500">
+                {skill}
+              </span>
+            ))}
+          </div>
+
           {workshop.completed && workshop.eventCode && (
-            <div className="mt-3 p-2 bg-white rounded border border-gold-500 inline-block">
+            <div className="mt-4 p-2 bg-cream rounded border border-gold-500">
               <p className="font-mono text-xs text-navy-700">
-                Event Code: <span className="font-bold">{workshop.eventCode}</span>
+                <span className="font-bold">Event Code:</span> {workshop.eventCode}
               </p>
             </div>
           )}
         </div>
 
+        {/* Submission section */}
         {workshop.completed && (
           <div className="mb-6">
             <h3 className="font-serif text-navy-700 text-lg mb-2">Submission</h3>
@@ -83,12 +119,14 @@ export function WorkshopPage({ workshop }: WorkshopPageProps) {
           </div>
         )}
 
+        {/* Footer */}
         <div className="mt-auto">
           <div className="border-t border-gold-500 pt-4">
-            <div className="font-mono text-xs text-stone-600">
+            <div className="font-mono text-xs text-stone-600 flex items-center">
+              <MapPin className="h-3 w-3 mr-1" />
               Workshop Leader: {workshop.id === "glaze" || workshop.id === "swirl" ? "Alex Chen" : "TBD"}
             </div>
-            <div className="font-mono text-xs text-stone-600">
+            <div className="font-mono text-xs text-stone-600 mt-1">
               Club: {workshop.id === "glaze" || workshop.id === "swirl" ? "Coding Chefs" : "TBD"}
             </div>
           </div>

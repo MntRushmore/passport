@@ -10,32 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, CheckCircle, Camera } from "lucide-react"
+import { ArrowLeft, CheckCircle, Camera, Loader2 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
-
-const workshopData = {
-  glaze: {
-    title: "Glaze",
-    emoji: "🍩",
-    description: "Create a delicious donut-themed web app with interactive glazing features.",
-  },
-  grub: {
-    title: "Grub",
-    emoji: "🍟",
-    description: "Build a fast food ordering system with real-time updates and notifications.",
-  },
-  boba: {
-    title: "Boba Drops",
-    emoji: "🧋",
-    description: "Design a bubble tea customization app with drag-and-drop functionality.",
-  },
-  swirl: {
-    title: "Swirl",
-    emoji: "🍦",
-    description: "Create an ice cream shop simulator with flavor mixing and topping options.",
-  },
-}
+import { api, apiHandler, type Workshop, type Submission } from "@/lib/api"
 
 export default function SubmitWorkshopPage() {
   const params = useParams()
@@ -43,22 +21,68 @@ export default function SubmitWorkshopPage() {
   const { user } = useAuth()
   const { toast } = useToast()
   const workshopId = params.workshop as string
-  const workshop = workshopData[workshopId as keyof typeof workshopData]
 
+  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
   const [eventCode, setEventCode] = useState("")
+  const [notes, setNotes] = useState("")
+  const [workshop, setWorkshop] = useState<Workshop | null>(null)
+  const [existingSubmission, setExistingSubmission] = useState<Submission | null>(null)
 
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!user) {
       router.push("/")
+      return
     }
-  }, [user, router])
+
+    // Load workshop and check for existing submission
+    const loadData = async () => {
+      setIsLoading(true)
+      try {
+        // Load workshop
+        const workshopData = await api.getWorkshop(workshopId)
+        setWorkshop(workshopData)
+
+        // Load submissions to check if this workshop is already submitted
+        const submissions = await api.getSubmissions()
+        const submission = submissions.find((s) => s.workshopId === workshopId && s.clubId === user.clubId)
+
+        if (submission) {
+          setExistingSubmission(submission)
+          setEventCode(submission.eventCode)
+          setNotes(submission.notes || "")
+        }
+      } catch (error) {
+        console.error("Error loading data:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load workshop data. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [user, router, workshopId, toast])
 
   if (!user) {
     return null // Don't render anything while redirecting
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-stone-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-navy-700 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+          <p className="mt-4 font-mono text-sm text-navy-700">Loading workshop...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!workshop) {
@@ -97,8 +121,8 @@ export default function SubmitWorkshopPage() {
       return
     }
 
-    // Validate photo upload
-    if (!fileName) {
+    // Validate photo upload if this is a new submission
+    if (!existingSubmission && !fileName) {
       toast({
         title: "Photo Required",
         description: "Please upload a photo of your workshop.",
@@ -109,31 +133,35 @@ export default function SubmitWorkshopPage() {
 
     setIsSubmitting(true)
 
-    // Simulate API call to Airtable
     try {
-      // Simulate network request
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Create submission data
+      const submissionData = {
+        workshopId: workshop.id,
+        clubId: user.clubId!,
+        userId: user.id,
+        eventCode: eventCode,
+        photoUrl: fileName || "existing-photo.jpg", // In a real app, we'd upload the file
+        notes: notes,
+      }
+
+      // Submit to API
+      await apiHandler(() => api.createSubmission(submissionData), {
+        loadingMessage: "Submitting workshop...",
+        successMessage: "Workshop submitted successfully!",
+        errorMessage: "Failed to submit workshop",
+        toast,
+      })
 
       // Show success state
       setIsSuccess(true)
-
-      // Show toast notification
-      toast({
-        title: "Workshop Submitted!",
-        description: `Your ${workshop.title} workshop has been successfully submitted.`,
-      })
 
       // Redirect after a delay
       setTimeout(() => {
         router.push("/dashboard")
       }, 2000)
     } catch (error) {
+      console.error("Submission error:", error)
       setIsSubmitting(false)
-      toast({
-        title: "Submission Failed",
-        description: "There was an error submitting your workshop. Please try again.",
-        variant: "destructive",
-      })
     }
   }
 
@@ -168,7 +196,9 @@ export default function SubmitWorkshopPage() {
               Back to Passport
             </Link>
           </Button>
-          <h1 className="text-2xl font-serif font-bold text-navy-700">Submit Workshop</h1>
+          <h1 className="text-2xl font-serif font-bold text-navy-700">
+            {existingSubmission ? "View Submission" : "Submit Workshop"}
+          </h1>
           <div className="w-[100px]"></div>
         </div>
 
@@ -188,7 +218,7 @@ export default function SubmitWorkshopPage() {
                 </Label>
                 <Input
                   id="clubName"
-                  defaultValue={user.club}
+                  defaultValue={user.clubName || ""}
                   className="border-gold-500 bg-white font-mono text-sm"
                   required
                   disabled
@@ -219,37 +249,54 @@ export default function SubmitWorkshopPage() {
                   placeholder="Enter the event code (e.g. GLAZE-123)"
                   className="border-gold-500 bg-white font-mono text-sm"
                   required
+                  disabled={!!existingSubmission}
                 />
                 <p className="text-xs font-mono text-stone-500 mt-1">Enter the event code provided for this workshop</p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="image" className="font-serif text-navy-700">
-                  Upload Workshop Photo
+                  Workshop Photo
                 </Label>
-                <div className="border-2 border-dashed border-gold-500 rounded-md p-6 text-center bg-white">
-                  <Camera className="h-8 w-8 mx-auto text-navy-700 mb-2" />
-                  <p className="font-mono text-xs text-stone-600 mb-2">
-                    {fileName ? fileName : "Take a photo of your workshop and upload it here"}
-                  </p>
-                  <Input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    required
-                    onChange={handleFileChange}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="border-gold-500 text-navy-700 font-mono text-xs"
-                    onClick={() => document.getElementById("image")?.click()}
-                  >
-                    {fileName ? "Change Photo" : "Upload Photo"}
-                  </Button>
-                </div>
+                {existingSubmission ? (
+                  <div className="border border-gold-500 rounded-md p-4 bg-white">
+                    <div className="flex items-center">
+                      <div className="w-16 h-16 bg-stone-200 rounded mr-3 flex items-center justify-center text-xs">
+                        <span className="text-2xl">{workshop.emoji}</span>
+                      </div>
+                      <div>
+                        <p className="text-navy-700 font-medium">workshop-photo.jpg</p>
+                        <p className="text-xs text-stone-500 mt-1">
+                          Uploaded {new Date(existingSubmission.submissionDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gold-500 rounded-md p-6 text-center bg-white">
+                    <Camera className="h-8 w-8 mx-auto text-navy-700 mb-2" />
+                    <p className="font-mono text-xs text-stone-600 mb-2">
+                      {fileName ? fileName : "Take a photo of your workshop and upload it here"}
+                    </p>
+                    <Input
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      required={!existingSubmission}
+                      onChange={handleFileChange}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-gold-500 text-navy-700 font-mono text-xs"
+                      onClick={() => document.getElementById("image")?.click()}
+                    >
+                      {fileName ? "Change Photo" : "Upload Photo"}
+                    </Button>
+                  </div>
+                )}
                 <p className="text-xs font-mono text-stone-500 mt-1">
                   Please include your club members in the photo if possible
                 </p>
@@ -261,18 +308,38 @@ export default function SubmitWorkshopPage() {
                 </Label>
                 <Textarea
                   id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
                   placeholder="Share any additional information about your workshop experience"
                   className="border-gold-500 bg-white font-mono text-sm min-h-[100px]"
+                  disabled={!!existingSubmission}
                 />
               </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-navy-700 hover:bg-navy-800 text-cream font-serif py-6"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Submitting..." : "Submit Workshop"}
-              </Button>
+              {!existingSubmission && (
+                <Button
+                  type="submit"
+                  className="w-full bg-navy-700 hover:bg-navy-800 text-cream font-serif py-6"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit Workshop"
+                  )}
+                </Button>
+              )}
+
+              {existingSubmission && (
+                <div className="flex justify-center">
+                  <Button asChild className="bg-navy-700 hover:bg-navy-800 text-cream font-serif">
+                    <Link href="/passport">Return to Passport</Link>
+                  </Button>
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>

@@ -5,29 +5,29 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { Slack } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export function LoginButton() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { login } = useAuth()
+  const { signInWithSlack } = useAuth()
+  const { toast } = useToast()
 
   const handleLogin = async () => {
     setIsLoading(true)
 
-    // Simulate Slack authentication
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    // Call the login function from auth context
-    login({
-      id: "user123",
-      name: "Alex Chen",
-      club: "Coding Chefs",
-      email: "alex@example.com",
-      avatar: "/placeholder.svg?height=40&width=40",
-    })
-
-    setIsLoading(false)
-    router.push("/passport")
+    try {
+      await signInWithSlack()
+      // The redirect will happen automatically via the OAuth flow
+    } catch (error) {
+      console.error("Login error:", error)
+      toast({
+        title: "Authentication failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+    }
   }
 
   return (
