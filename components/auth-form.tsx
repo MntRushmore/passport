@@ -13,6 +13,7 @@ import { useAuth } from "@/components/auth-provider"
 import { Mail, Loader2, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { getSupabaseBrowserClient } from "@/lib/supabase"
 
 export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -37,19 +38,57 @@ export function AuthForm() {
     setIsLoading(true)
 
     try {
-      await signInWithEmail(email, password)
-      // After successful sign-in, show a toast notification
+      // Direct Supabase sign-in instead of using the auth provider
+      const supabase = getSupabaseBrowserClient()
+
+      // Sign in with Supabase directly
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        throw error
+      }
+
+      // Show success toast
       toast({
         title: "Sign in successful",
         description: "Redirecting to your dashboard...",
       })
 
-      // The auth provider will handle the redirect, but we can add a fallback
-      setTimeout(() => {
-        if (window.location.pathname === "/") {
+      // Check if user has a club and redirect accordingly
+      if (data.user) {
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("club_id")
+            .eq("auth_id", data.user.id)
+            .single()
+
+          if (userError) {
+            if (userError.code === "PGRST116") {
+              // User not found in database, redirect to onboarding
+              console.log("User not found in database, redirecting to onboarding")
+              router.push("/onboarding")
+            } else {
+              throw userError
+            }
+          } else if (!userData || !userData.club_id) {
+            // User has no club, redirect to onboarding
+            console.log("User has no club, redirecting to onboarding")
+            router.push("/onboarding")
+          } else {
+            // User has a club, redirect to dashboard
+            console.log("User has club, redirecting to dashboard")
+            router.push("/dashboard")
+          }
+        } catch (err) {
+          console.error("Error checking user data after sign in:", err)
+          // Default to dashboard
           router.push("/dashboard")
         }
-      }, 2000)
+      }
     } catch (error) {
       console.error("Sign in error:", error)
       setFormError(error instanceof Error ? error.message : "Authentication failed")
@@ -74,7 +113,51 @@ export function AuthForm() {
     }
 
     try {
-      await signUpWithEmail(email, password, name)
+      // Direct Supabase sign-up instead of using the auth provider
+      const supabase = getSupabaseBrowserClient()
+
+      // Sign up with Supabase directly
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      })
+
+      if (error) {
+        throw error
+      }
+
+      // If user was created, create user record and redirect
+      if (data.user) {
+        try {
+          // Create user record in the database
+          const userData = {
+            auth_id: data.user.id,
+            name: name,
+            email: email,
+            role: "leader",
+          }
+
+          await supabase.from("users").insert(userData)
+
+          // Show success toast
+          toast({
+            title: "Account created successfully",
+            description: "Redirecting to onboarding...",
+          })
+
+          // Redirect to onboarding
+          router.push("/onboarding")
+        } catch (err) {
+          console.error("Error creating user record:", err)
+          // Still redirect to onboarding
+          router.push("/onboarding")
+        }
+      }
     } catch (error) {
       console.error("Sign up error:", error)
       setFormError(error instanceof Error ? error.message : "Registration failed")
