@@ -1,6 +1,5 @@
-import Link from "next/link"
 import { PassportCover } from "@/components/passport-cover"
-import { LoginButton } from "@/components/login-button"
+import { AuthForm } from "@/components/auth-form"
 import { Shield, Users, Zap } from "lucide-react"
 
 export default function Home() {
@@ -15,18 +14,7 @@ export default function Home() {
 
         <PassportCover />
 
-        <div className="flex flex-col space-y-4">
-          <LoginButton />
-
-          <div className="text-center text-sm font-mono text-stone-500 mt-4">
-            <p>
-              Already logged in?{" "}
-              <Link href="/dashboard" className="text-navy-700 underline">
-                View your passport
-              </Link>
-            </p>
-          </div>
-        </div>
+        <AuthForm />
 
         <div className="border-2 border-gold-500 rounded-lg p-6 bg-cream">
           <h2 className="font-serif text-navy-700 text-xl mb-3 text-center">About the Challenge</h2>
@@ -46,7 +34,7 @@ export default function Home() {
           <div className="bg-white p-4 rounded-lg border border-gold-500 flex flex-col items-center text-center">
             <Shield className="h-8 w-8 text-navy-700 mb-2" />
             <h3 className="font-serif text-navy-700 text-sm mb-1">Secure Authentication</h3>
-            <p className="text-xs font-mono text-stone-600">Sign in securely with your Slack account</p>
+            <p className="text-xs font-mono text-stone-600">Sign in securely with your account</p>
           </div>
 
           <div className="bg-white p-4 rounded-lg border border-gold-500 flex flex-col items-center text-center">

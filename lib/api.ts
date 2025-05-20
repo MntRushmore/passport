@@ -83,7 +83,11 @@ class ApiService {
         // This is a new user who needs to create a profile
         return {
           id: session.user.id,
-          name: session.user.user_metadata.name || session.user.user_metadata.preferred_username || "",
+          name:
+            session.user.user_metadata.name ||
+            session.user.user_metadata.preferred_username ||
+            session.user.email?.split("@")[0] ||
+            "",
           email: session.user.email || "",
           avatar: session.user.user_metadata.avatar_url || null,
           clubId: null,
@@ -112,11 +116,54 @@ class ApiService {
   async signInWithSlack(): Promise<void> {
     const supabase = getSupabaseBrowserClient()
 
-    const { error } = await supabase.auth.signInWithOAuth({
+    // Get the current origin for the redirect
+    const redirectTo = `${window.location.origin}/auth/callback`
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "slack",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo,
         scopes: "identity.basic,identity.email,identity.avatar",
+        // Add skipBrowserRedirect to handle the redirect manually if needed
+        skipBrowserRedirect: false,
+      },
+    })
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    // If we're using skipBrowserRedirect, we need to manually redirect
+    // if (data?.url) {
+    //   window.location.href = data.url
+    // }
+  }
+
+  // Sign in with email and password
+  async signInWithEmail(email: string, password: string): Promise<void> {
+    const supabase = getSupabaseBrowserClient()
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      throw new Error(error.message)
+    }
+  }
+
+  // Sign up with email and password
+  async signUpWithEmail(email: string, password: string, name: string): Promise<void> {
+    const supabase = getSupabaseBrowserClient()
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+        },
       },
     })
 
