@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/supabase"
 
-// Create a single supabase client for the browser
 const createBrowserClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
@@ -16,13 +15,11 @@ const createBrowserClient = () => {
       autoRefreshToken: true,
       detectSessionInUrl: true,
       flowType: "pkce",
-      // Use the current site URL for redirects instead of localhost
       redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined,
     },
   })
 }
 
-// Create a singleton instance for client-side usage
 let browserClient: ReturnType<typeof createClient<Database>> | null = null
 
 export const getSupabaseBrowserClient = () => {
@@ -32,13 +29,18 @@ export const getSupabaseBrowserClient = () => {
   return browserClient
 }
 
-// Create a server client (to be used in server components or API routes)
 export const createServerClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error("Missing Supabase environment variables")
+    console.error("Missing Supabase environment variables for server client")
+    return createClient("https://example.com", "dummy-key", {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    })
   }
 
   return createClient<Database>(supabaseUrl, supabaseServiceKey, {

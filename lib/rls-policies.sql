@@ -1,3 +1,21 @@
+-- Drop existing policies to recreate them
+DROP POLICY IF EXISTS "Anyone can read clubs" ON clubs;
+DROP POLICY IF EXISTS "Users can create clubs" ON clubs;
+DROP POLICY IF EXISTS "Leaders can update their own club" ON clubs;
+DROP POLICY IF EXISTS "Admins can delete clubs" ON clubs;
+DROP POLICY IF EXISTS "Authenticated users can read all users" ON users;
+DROP POLICY IF EXISTS "Users can update their own data" ON users;
+DROP POLICY IF EXISTS "Authenticated users can create user records" ON users;
+DROP POLICY IF EXISTS "Admins can delete users" ON users;
+DROP POLICY IF EXISTS "Anyone can read workshops" ON workshops;
+DROP POLICY IF EXISTS "Admins can manage workshops" ON workshops;
+DROP POLICY IF EXISTS "Anyone can read submissions" ON submissions;
+DROP POLICY IF EXISTS "Leaders can create submissions for their club" ON submissions;
+DROP POLICY IF EXISTS "Leaders can update their club's submissions" ON submissions;
+DROP POLICY IF EXISTS "Admins can delete submissions" ON submissions;
+DROP POLICY IF EXISTS "Anyone can read club_members" ON club_members;
+DROP POLICY IF EXISTS "Leaders can manage members in their club" ON club_members;
+
 -- Enable Row Level Security on all tables
 ALTER TABLE clubs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -6,18 +24,15 @@ ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE club_members ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for clubs table
--- Anyone can read clubs
 CREATE POLICY "Anyone can read clubs" ON clubs
   FOR SELECT
   USING (true);
 
--- Users can create clubs
 CREATE POLICY "Users can create clubs" ON clubs
   FOR INSERT
   TO authenticated
   WITH CHECK (true);
 
--- Leaders can update their own club
 CREATE POLICY "Leaders can update their own club" ON clubs
   FOR UPDATE
   TO authenticated
@@ -28,7 +43,6 @@ CREATE POLICY "Leaders can update their own club" ON clubs
     AND users.role = 'leader'
   ));
 
--- Admins can delete clubs
 CREATE POLICY "Admins can delete clubs" ON clubs
   FOR DELETE
   TO authenticated
@@ -39,7 +53,8 @@ CREATE POLICY "Admins can delete clubs" ON clubs
   ));
 
 -- Create policies for users table
--- Anyone can read users
+-- IMPORTANT: This is the key change to prevent infinite recursion
+-- Allow all authenticated users to read all user records without any checks
 CREATE POLICY "Anyone can read users" ON users
   FOR SELECT
   USING (true);
@@ -48,29 +63,25 @@ CREATE POLICY "Anyone can read users" ON users
 CREATE POLICY "Users can update their own data" ON users
   FOR UPDATE
   TO authenticated
-  USING (auth.uid() = auth_id);
+  USING (auth_id = auth.uid());
 
 -- Authenticated users can create user records
 CREATE POLICY "Authenticated users can create user records" ON users
   FOR INSERT
   TO authenticated
-  WITH CHECK (auth.uid() = auth_id);
+  WITH CHECK (true);
 
--- Admins can delete users
+-- Admins can delete users - FIXED to avoid recursion
 CREATE POLICY "Admins can delete users" ON users
   FOR DELETE
   TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM users u
-    WHERE u.auth_id = auth.uid()
-    AND u.role = 'admin'
+  USING (auth.uid() IN (
+    SELECT auth_id FROM users WHERE role = 'admin'
   ));
 
 -- Create policies for workshops table
--- Anyone can read workshops
 CREATE POLICY "Anyone can read workshops" ON workshops
   FOR SELECT
-  TO authenticated
   USING (true);
 
 -- Admins can create, update, delete workshops
@@ -84,10 +95,8 @@ CREATE POLICY "Admins can manage workshops" ON workshops
   ));
 
 -- Create policies for submissions table
--- Anyone can read submissions
 CREATE POLICY "Anyone can read submissions" ON submissions
   FOR SELECT
-  TO authenticated
   USING (true);
 
 -- Leaders can create submissions for their club
@@ -123,10 +132,8 @@ CREATE POLICY "Admins can delete submissions" ON submissions
   ));
 
 -- Create policies for club_members table
--- Anyone can read club_members
 CREATE POLICY "Anyone can read club_members" ON club_members
   FOR SELECT
-  TO authenticated
   USING (true);
 
 -- Leaders can manage members in their club

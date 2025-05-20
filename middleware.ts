@@ -6,7 +6,6 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
-  // Add Content Security Policy headers
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval';
@@ -22,32 +21,23 @@ export async function middleware(req: NextRequest) {
 
   res.headers.set("Content-Security-Policy", cspHeader)
 
-  // Refresh session if expired
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Public paths that don't require authentication
   const publicPaths = ["/", "/auth/callback"]
   const isPublicPath = publicPaths.some(
     (path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith("/auth/"),
   )
 
-  // Onboarding path - only accessible for authenticated users without a club
   const isOnboardingPath = req.nextUrl.pathname === "/onboarding"
 
-  // If user is not signed in and the current path is not public,
-  // redirect the user to the home page
   if (!session && !isPublicPath) {
-    console.log("No session, redirecting to home", req.nextUrl.pathname)
     const redirectUrl = new URL("/", req.url)
     return NextResponse.redirect(redirectUrl)
   }
 
-  // If user is signed in but trying to access the home page,
-  // redirect to dashboard
   if (session && req.nextUrl.pathname === "/") {
-    console.log("Has session, redirecting to dashboard")
     const redirectUrl = new URL("/dashboard", req.url)
     return NextResponse.redirect(redirectUrl)
   }
@@ -56,15 +46,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - public files
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 }

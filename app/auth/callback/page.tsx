@@ -14,28 +14,27 @@ export default function AuthCallbackPage() {
   const { toast } = useToast()
   const [error, setError] = useState<string | null>(null)
   const [errorDetails, setErrorDetails] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(true)
 
   useEffect(() => {
     const handleCallback = async () => {
       const supabase = getSupabaseBrowserClient()
 
-      // Check if there's an error in the URL
-      const errorParam = searchParams.get("error")
-      const errorDescription = searchParams.get("error_description")
-
-      if (errorParam) {
-        setError(`Authentication Error: ${errorParam}`)
-        setErrorDetails(errorDescription)
-        return
-      }
-
       try {
-        // Get the code from the URL if it exists
+        const errorParam = searchParams.get("error")
+        const errorDescription = searchParams.get("error_description")
+
+        if (errorParam) {
+          setError(`Authentication Error: ${errorParam}`)
+          setErrorDetails(errorDescription)
+          setIsProcessing(false)
+          return
+        }
+
         const code = searchParams.get("code")
 
         if (code) {
           console.log("Exchanging code for session")
-          // Exchange the code for a session
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
           if (exchangeError) {
@@ -43,7 +42,6 @@ export default function AuthCallbackPage() {
           }
         }
 
-        // Try to get the session
         const { data, error } = await supabase.auth.getSession()
 
         if (error) {
@@ -54,39 +52,26 @@ export default function AuthCallbackPage() {
           throw new Error("No session found")
         }
 
-        console.log("Session found, checking if user exists in database")
-
-        // Check if this is a new user
         const { data: userData, error: userError } = await supabase
           .from("users")
-          .select("id, club_id")
+          .select("club_id")
           .eq("auth_id", data.session.user.id)
           .single()
 
-        if (userError) {
-          if (userError.code === "PGRST116") {
-            // User not found in our database, redirect to onboarding
-            console.log("User not found in database, redirecting to onboarding")
-            router.push("/onboarding")
-          } else {
-            throw userError
-          }
+        if (userError && userError.code !== "PGRST116") {
+          throw userError
+        }
+
+        if (!userData || !userData.club_id) {
+          router.push("/onboarding")
         } else {
-          // Existing user
-          if (userData.club_id) {
-            // User has a club, redirect to dashboard
-            console.log("User has a club, redirecting to dashboard")
-            router.push("/dashboard")
-          } else {
-            // User doesn't have a club, redirect to onboarding
-            console.log("User doesn't have a club, redirecting to onboarding")
-            router.push("/onboarding")
-          }
+          router.push("/dashboard")
         }
       } catch (err) {
         console.error("Error in auth callback:", err)
         setError(err instanceof Error ? err.message : "Authentication failed")
         setErrorDetails("There was a problem completing the authentication process. Please try again.")
+        setIsProcessing(false)
 
         toast({
           title: "Authentication Error",
@@ -109,7 +94,7 @@ export default function AuthCallbackPage() {
           <h2 className="text-xl font-serif text-navy-700 mb-2">{error}</h2>
           {errorDetails && <p className="text-sm font-mono text-stone-600 mb-4">{errorDetails}</p>}
 
-          <div className="flex flex-col sm:flex-row justify-center gap-3 mt-6">
+          <div className="flex justify-center gap-3 mt-6">
             <Button asChild className="bg-navy-700 hover:bg-navy-800 text-cream font-serif">
               <Link href="/">Return to Login</Link>
             </Button>

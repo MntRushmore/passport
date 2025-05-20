@@ -1,7 +1,5 @@
--- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create clubs table
 CREATE TABLE IF NOT EXISTS clubs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
@@ -11,7 +9,6 @@ CREATE TABLE IF NOT EXISTS clubs (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create users table
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   auth_id TEXT UNIQUE NOT NULL,
@@ -24,7 +21,6 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create workshops table
 CREATE TABLE IF NOT EXISTS workshops (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title VARCHAR(255) NOT NULL,
@@ -37,7 +33,6 @@ CREATE TABLE IF NOT EXISTS workshops (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create submissions table
 CREATE TABLE IF NOT EXISTS submissions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workshop_id UUID NOT NULL REFERENCES workshops(id),
@@ -51,7 +46,6 @@ CREATE TABLE IF NOT EXISTS submissions (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create club_members table for many-to-many relationship
 CREATE TABLE IF NOT EXISTS club_members (
   club_id UUID NOT NULL REFERENCES clubs(id),
   user_id UUID NOT NULL REFERENCES users(id),
@@ -59,7 +53,6 @@ CREATE TABLE IF NOT EXISTS club_members (
   PRIMARY KEY (club_id, user_id)
 );
 
--- Create views for easier querying
 CREATE OR REPLACE VIEW club_stats AS
 SELECT 
   c.id,
@@ -99,7 +92,6 @@ JOIN
 JOIN 
   users u ON s.user_id = u.id;
 
--- Add triggers to update the updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN

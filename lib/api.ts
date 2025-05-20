@@ -1,7 +1,6 @@
 import { getSupabaseBrowserClient } from "@/lib/supabase"
 import type { UserRole, WorkshopDifficulty, SubmissionStatus } from "@/types/supabase"
 
-// Types for our data models
 export interface User {
   id: string
   name: string
@@ -48,58 +47,54 @@ export interface Submission {
   submissionDate: string
 }
 
-// API service for data operations
 class ApiService {
-  // Get current user
   async getCurrentUser(): Promise<User | null> {
     const supabase = getSupabaseBrowserClient()
 
-    // Get the current session
     const {
       data: { session },
     } = await supabase.auth.getSession()
     if (!session) return null
 
     try {
-      // Get the user from the database
+      // Use a simpler query to avoid recursion
       const { data, error } = await supabase
         .from("users")
-        .select(`
-          id,
-          name,
-          email,
-          avatar_url,
-          club_id,
-          role,
-          clubs:club_id (
-            name
-          )
-        `)
+        .select("id, name, email, avatar_url, club_id, role")
         .eq("auth_id", session.user.id)
         .single()
 
       if (error) {
         if (error.code === "PGRST116") {
-          // User not found in our database, but authenticated with Supabase
-          // This is a new user who needs to create a profile
           console.log("New user detected, needs to create profile")
           return {
             id: session.user.id,
-            name:
-              session.user.user_metadata.name ||
-              session.user.user_metadata.preferred_username ||
-              session.user.email?.split("@")[0] ||
-              "",
+            name: session.user.user_metadata.name || session.user.email?.split("@")[0] || "",
             email: session.user.email || "",
             avatar: session.user.user_metadata.avatar_url || null,
             clubId: null,
             clubName: null,
-            role: "leader", // Default role for new users
+            role: "leader",
             isNewUser: true,
           }
         }
+
         console.error("Error fetching user:", error)
         throw error
+      }
+
+      // Get club name in a separate query if needed
+      let clubName = null
+      if (data.club_id) {
+        const { data: clubData, error: clubError } = await supabase
+          .from("clubs")
+          .select("name")
+          .eq("id", data.club_id)
+          .single()
+
+        if (!clubError && clubData) {
+          clubName = clubData.name
+        }
       }
 
       return {
@@ -108,17 +103,27 @@ class ApiService {
         email: data.email,
         avatar: data.avatar_url,
         clubId: data.club_id,
-        clubName: data.clubs?.name || null,
+        clubName: clubName,
         role: data.role,
         isNewUser: false,
       }
     } catch (error) {
       console.error("Error in getCurrentUser:", error)
-      throw error
+
+      // Return a fallback user object
+      return {
+        id: session.user.id,
+        name: session.user.user_metadata.name || session.user.email?.split("@")[0] || "New User",
+        email: session.user.email || "",
+        avatar: session.user.user_metadata.avatar_url || null,
+        clubId: null,
+        clubName: null,
+        role: "leader",
+        isNewUser: true,
+      }
     }
   }
 
-  // Sign in with email and password
   async signInWithEmail(email: string, password: string): Promise<void> {
     const supabase = getSupabaseBrowserClient()
 
@@ -132,36 +137,42 @@ class ApiService {
     }
   }
 
-  // Sign up with email and password
   async signUpWithEmail(email: string, password: string, name: string): Promise<void> {
     const supabase = getSupabaseBrowserClient()
 
-    // Get the current origin for the redirect URL
-    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined
-
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           name,
         },
-        emailRedirectTo: redirectTo,
       },
     })
 
     if (error) {
       throw new Error(error.message)
     }
+
+    if (data.user) {
+      try {
+        await supabase.from("users").insert({
+          auth_id: data.user.id,
+          name: name,
+          email: email,
+          role: "leader",
+        })
+      } catch (userError) {
+        console.error("Error creating user record:", userError)
+      }
+    }
   }
 
-  // Sign out
   async signOut(): Promise<void> {
     const supabase = getSupabaseBrowserClient()
     await supabase.auth.signOut()
   }
 
-  // Create a new club and set the current user as the leader
   async createClub(data: {
     name: string
     location?: string
@@ -173,7 +184,6 @@ class ApiService {
   }): Promise<{ clubId: string; userId: string }> {
     const supabase = getSupabaseBrowserClient()
 
-    // Get the current session to verify the user
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -182,7 +192,6 @@ class ApiService {
     }
 
     try {
-      // First, create the club
       const { data: club, error: clubError } = await supabase
         .from("clubs")
         .insert({
@@ -199,7 +208,6 @@ class ApiService {
 
       console.log("Club created:", club)
 
-      // Then, create or update the user record
       const { data: user, error: userError } = await supabase
         .from("users")
         .upsert({
@@ -208,13 +216,12 @@ class ApiService {
           email: data.userEmail,
           avatar_url: data.userAvatar || null,
           club_id: club.id,
-          role: "leader", // Set as club leader
+          role: "leader",
         })
         .select("id")
         .single()
 
       if (userError) {
-        // If user creation fails, we should clean up the club
         console.error("Failed to create user:", userError)
         await supabase.from("clubs").delete().eq("id", club.id)
         throw new Error(`Failed to create user: ${userError.message}`)
@@ -229,7 +236,6 @@ class ApiService {
     }
   }
 
-  // Get all workshops
   async getWorkshops(): Promise<Workshop[]> {
     const supabase = getSupabaseBrowserClient()
 
@@ -250,7 +256,6 @@ class ApiService {
     }))
   }
 
-  // Get a specific workshop
   async getWorkshop(id: string): Promise<Workshop | null> {
     const supabase = getSupabaseBrowserClient()
 
@@ -274,7 +279,6 @@ class ApiService {
     }
   }
 
-  // Get all clubs
   async getClubs(): Promise<Club[]> {
     const supabase = getSupabaseBrowserClient()
 
@@ -284,14 +288,12 @@ class ApiService {
       throw new Error(error.message)
     }
 
-    // Get additional club details
     const { data: clubDetails, error: detailsError } = await supabase.from("clubs").select("id, location, description")
 
     if (detailsError) {
       throw new Error(detailsError.message)
     }
 
-    // Merge the data
     return data.map((club) => {
       const details = clubDetails.find((c) => c.id === club.id)
       return {
@@ -305,7 +307,6 @@ class ApiService {
     })
   }
 
-  // Get all submissions
   async getSubmissions(): Promise<Submission[]> {
     const supabase = getSupabaseBrowserClient()
 
@@ -335,7 +336,6 @@ class ApiService {
     }))
   }
 
-  // Create a submission
   async createSubmission(data: {
     workshopId: string
     clubId: string
@@ -367,7 +367,6 @@ class ApiService {
     return submission.id
   }
 
-  // Delete a submission
   async deleteSubmission(id: string): Promise<void> {
     const supabase = getSupabaseBrowserClient()
 
@@ -378,7 +377,6 @@ class ApiService {
     }
   }
 
-  // Delete a club
   async deleteClub(id: string): Promise<void> {
     const supabase = getSupabaseBrowserClient()
 
@@ -389,7 +387,6 @@ class ApiService {
     }
   }
 
-  // Upload a file to Supabase Storage
   async uploadFile(file: File, bucket: string, path: string): Promise<string> {
     const supabase = getSupabaseBrowserClient()
 
@@ -402,7 +399,6 @@ class ApiService {
       throw new Error(error.message)
     }
 
-    // Get the public URL
     const {
       data: { publicUrl },
     } = supabase.storage.from(bucket).getPublicUrl(data.path)
@@ -411,10 +407,8 @@ class ApiService {
   }
 }
 
-// Create and export a singleton instance
 export const api = new ApiService()
 
-// Helper function to handle API errors with toast notifications
 export type ToastFunction = (props: {
   title: string
   description?: string
