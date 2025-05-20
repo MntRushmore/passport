@@ -112,33 +112,6 @@ class ApiService {
     }
   }
 
-  // Sign in with Slack OAuth
-  async signInWithSlack(): Promise<void> {
-    const supabase = getSupabaseBrowserClient()
-
-    // Get the current origin for the redirect
-    const redirectTo = `${window.location.origin}/auth/callback`
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "slack",
-      options: {
-        redirectTo,
-        scopes: "identity.basic,identity.email,identity.avatar",
-        // Add skipBrowserRedirect to handle the redirect manually if needed
-        skipBrowserRedirect: false,
-      },
-    })
-
-    if (error) {
-      throw new Error(error.message)
-    }
-
-    // If we're using skipBrowserRedirect, we need to manually redirect
-    // if (data?.url) {
-    //   window.location.href = data.url
-    // }
-  }
-
   // Sign in with email and password
   async signInWithEmail(email: string, password: string): Promise<void> {
     const supabase = getSupabaseBrowserClient()
@@ -258,6 +231,30 @@ class ApiService {
     }))
   }
 
+  // Get a specific workshop
+  async getWorkshop(id: string): Promise<Workshop | null> {
+    const supabase = getSupabaseBrowserClient()
+
+    const { data, error } = await supabase.from("workshops").select("*").eq("id", id).single()
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        return null
+      }
+      throw new Error(error.message)
+    }
+
+    return {
+      id: data.id,
+      title: data.title,
+      emoji: data.emoji,
+      description: data.description,
+      difficulty: data.difficulty,
+      duration: data.duration,
+      skills: data.skills,
+    }
+  }
+
   // Get all clubs
   async getClubs(): Promise<Club[]> {
     const supabase = getSupabaseBrowserClient()
@@ -317,6 +314,60 @@ class ApiService {
       status: submission.status,
       submissionDate: submission.submission_date,
     }))
+  }
+
+  // Create a submission
+  async createSubmission(data: {
+    workshopId: string
+    clubId: string
+    userId: string
+    eventCode: string
+    photoUrl?: string
+    notes?: string
+  }): Promise<string> {
+    const supabase = getSupabaseBrowserClient()
+
+    const { data: submission, error } = await supabase
+      .from("submissions")
+      .insert({
+        workshop_id: data.workshopId,
+        club_id: data.clubId,
+        user_id: data.userId,
+        event_code: data.eventCode,
+        photo_url: data.photoUrl || null,
+        notes: data.notes || null,
+        status: "pending",
+      })
+      .select("id")
+      .single()
+
+    if (error) {
+      throw new Error(`Failed to create submission: ${error.message}`)
+    }
+
+    return submission.id
+  }
+
+  // Delete a submission
+  async deleteSubmission(id: string): Promise<void> {
+    const supabase = getSupabaseBrowserClient()
+
+    const { error } = await supabase.from("submissions").delete().eq("id", id)
+
+    if (error) {
+      throw new Error(`Failed to delete submission: ${error.message}`)
+    }
+  }
+
+  // Delete a club
+  async deleteClub(id: string): Promise<void> {
+    const supabase = getSupabaseBrowserClient()
+
+    const { error } = await supabase.from("clubs").delete().eq("id", id)
+
+    if (error) {
+      throw new Error(`Failed to delete club: ${error.message}`)
+    }
   }
 
   // Upload a file to Supabase Storage

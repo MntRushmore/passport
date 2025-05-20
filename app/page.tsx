@@ -1,7 +1,6 @@
 import { PassportCover } from "@/components/passport-cover"
 import { AuthForm } from "@/components/auth-form"
-import { Shield, Users, Zap, Settings } from "lucide-react"
-import Link from "next/link"
+import { Shield, Users, Zap } from "lucide-react"
 
 export default function Home() {
   return (
@@ -49,16 +48,6 @@ export default function Home() {
             <h3 className="font-serif text-navy-700 text-sm mb-1">Track Progress</h3>
             <p className="text-xs font-mono text-stone-600">Complete workshops and collect stamps</p>
           </div>
-        </div>
-
-        <div className="text-center">
-          <Link
-            href="/admin/slack-setup"
-            className="text-xs font-mono text-navy-700 hover:underline inline-flex items-center"
-          >
-            <Settings className="h-3 w-3 mr-1" />
-            Admin: Fix Slack Authentication
-          </Link>
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
-import { Slack, Mail, Loader2, AlertCircle, Info } from "lucide-react"
+import { Mail, Loader2, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -20,30 +20,10 @@ export function AuthForm() {
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin")
-  const [showDebug, setShowDebug] = useState(false)
-  const [slackDisabled, setSlackDisabled] = useState(false)
 
   const router = useRouter()
-  const { signInWithSlack, signInWithEmail, signUpWithEmail, authError, clearAuthError, debugInfo } = useAuth()
+  const { signInWithEmail, signUpWithEmail, authError, clearAuthError } = useAuth()
   const { toast } = useToast()
-
-  const handleSlackLogin = async () => {
-    setIsLoading(true)
-    clearAuthError()
-
-    try {
-      await signInWithSlack()
-      // The redirect will happen automatically via the OAuth flow
-    } catch (error) {
-      console.error("Login error:", error)
-      setIsLoading(false)
-
-      // If we get the "provider is not enabled" error, disable the Slack button
-      if (error instanceof Error && error.message.includes("provider is not enabled")) {
-        setSlackDisabled(true)
-      }
-    }
-  }
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -109,56 +89,6 @@ export function AuthForm() {
         )}
 
         <div className="space-y-4">
-          {!slackDisabled && (
-            <Button
-              onClick={handleSlackLogin}
-              disabled={isLoading || slackDisabled}
-              className="w-full bg-[#4A154B] hover:bg-[#3e1240] text-white font-mono text-sm py-6 relative overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(255,255,255,0)_0%,_rgba(255,255,255,0.1)_50%,_rgba(255,255,255,0)_100%)] translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-              <Slack className="mr-2 h-5 w-5" />
-              {isLoading ? "Authenticating..." : "Sign in with Slack"}
-            </Button>
-          )}
-
-          {slackDisabled && (
-            <Alert className="bg-amber-50 border-amber-200 mb-4">
-              <AlertCircle className="h-4 w-4 text-amber-500" />
-              <AlertDescription className="text-amber-800">
-                Slack authentication is not enabled. Please use email login or see the admin guide to enable Slack.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {debugInfo && (
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute right-0 top-0 h-6 w-6 p-0 rounded-full"
-                onClick={() => setShowDebug(!showDebug)}
-              >
-                <Info className="h-3 w-3" />
-              </Button>
-              {showDebug && (
-                <Alert className="bg-stone-50 border-stone-200 mt-2">
-                  <AlertDescription className="font-mono text-xs overflow-auto">
-                    <pre>{debugInfo}</pre>
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          )}
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gold-500"></span>
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-cream px-2 text-stone-600 font-mono">Continue with email</span>
-            </div>
-          </div>
-
           <Tabs defaultValue="signin" value={activeTab} onValueChange={(v) => setActiveTab(v as "signin" | "signup")}>
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="signin">Sign In</TabsTrigger>

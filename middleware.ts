@@ -6,15 +6,15 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
-  // Add Content Security Policy headers to allow Slack OAuth
+  // Add Content Security Policy headers
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval';
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: https:;
     font-src 'self';
-    connect-src 'self' https://*.supabase.co https://api.slack.com;
-    frame-src 'self' https://*.supabase.co https://slack.com;
+    connect-src 'self' https://*.supabase.co;
+    frame-src 'self' https://*.supabase.co;
     form-action 'self';
   `
     .replace(/\s{2,}/g, " ")
