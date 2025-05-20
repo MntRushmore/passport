@@ -30,7 +30,20 @@ export default function AuthCallbackPage() {
       }
 
       try {
-        // Try to get the session from the URL
+        // Get the code from the URL if it exists
+        const code = searchParams.get("code")
+
+        if (code) {
+          console.log("Exchanging code for session")
+          // Exchange the code for a session
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+
+          if (exchangeError) {
+            throw exchangeError
+          }
+        }
+
+        // Try to get the session
         const { data, error } = await supabase.auth.getSession()
 
         if (error) {
@@ -41,28 +54,39 @@ export default function AuthCallbackPage() {
           throw new Error("No session found")
         }
 
+        console.log("Session found, checking if user exists in database")
+
         // Check if this is a new user
         const { data: userData, error: userError } = await supabase
           .from("users")
-          .select("id")
+          .select("id, club_id")
           .eq("auth_id", data.session.user.id)
           .single()
 
-        if (userError && userError.code === "PGRST116") {
-          // User not found, redirect to onboarding
-          router.push("/onboarding")
-        } else if (userError) {
-          throw userError
+        if (userError) {
+          if (userError.code === "PGRST116") {
+            // User not found in our database, redirect to onboarding
+            console.log("User not found in database, redirecting to onboarding")
+            router.push("/onboarding")
+          } else {
+            throw userError
+          }
         } else {
-          // Existing user, redirect to dashboard
-          router.push("/dashboard")
+          // Existing user
+          if (userData.club_id) {
+            // User has a club, redirect to dashboard
+            console.log("User has a club, redirecting to dashboard")
+            router.push("/dashboard")
+          } else {
+            // User doesn't have a club, redirect to onboarding
+            console.log("User doesn't have a club, redirecting to onboarding")
+            router.push("/onboarding")
+          }
         }
       } catch (err) {
         console.error("Error in auth callback:", err)
         setError(err instanceof Error ? err.message : "Authentication failed")
-        setErrorDetails(
-          "There was a problem completing the authentication process. Please try again or use email login.",
-        )
+        setErrorDetails("There was a problem completing the authentication process. Please try again.")
 
         toast({
           title: "Authentication Error",
@@ -88,9 +112,6 @@ export default function AuthCallbackPage() {
           <div className="flex flex-col sm:flex-row justify-center gap-3 mt-6">
             <Button asChild className="bg-navy-700 hover:bg-navy-800 text-cream font-serif">
               <Link href="/">Return to Login</Link>
-            </Button>
-            <Button asChild variant="outline" className="border-gold-500 text-navy-700">
-              <Link href="/auth/troubleshoot">Troubleshooting Guide</Link>
             </Button>
           </div>
         </div>

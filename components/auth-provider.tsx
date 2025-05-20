@@ -30,11 +30,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for existing session
     const loadUser = async () => {
       try {
+        // First check if we have a session
+        const { data: sessionData } = await supabase.auth.getSession()
+
+        if (!sessionData.session) {
+          setUser(null)
+          setIsLoading(false)
+          return
+        }
+
         const currentUser = await api.getCurrentUser()
         setUser(currentUser)
 
         // If this is a new user, redirect to onboarding
         if (currentUser?.isNewUser) {
+          console.log("New user detected, redirecting to onboarding")
           router.push("/onboarding")
         }
       } catch (error) {
@@ -51,16 +61,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        const currentUser = await api.getCurrentUser()
-        setUser(currentUser)
+      console.log("Auth state changed:", event, session?.user?.email)
 
-        // If this is a new user, redirect to onboarding
-        if (currentUser?.isNewUser) {
-          router.push("/onboarding")
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        try {
+          const currentUser = await api.getCurrentUser()
+          setUser(currentUser)
+
+          // If this is a new user, redirect to onboarding
+          if (currentUser?.isNewUser) {
+            console.log("New user detected after auth change, redirecting to onboarding")
+            router.push("/onboarding")
+          } else if (currentUser && !window.location.pathname.includes("/dashboard")) {
+            router.push("/dashboard")
+          }
+        } catch (error) {
+          console.error("Error getting user after auth change:", error)
         }
       } else if (event === "SIGNED_OUT") {
         setUser(null)
+        router.push("/")
       }
     })
 
@@ -75,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthError(null)
     try {
       await api.signInWithEmail(email, password)
+      // The auth state change listener will handle the redirect
     } catch (error) {
       console.error("Email sign in error:", error)
       setAuthError(error instanceof Error ? error.message : "Authentication failed")

@@ -31,9 +31,13 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
+        console.log("No user, redirecting to home")
         router.push("/")
       } else if (user.clubId && !user.isNewUser) {
+        console.log("User already has a club, redirecting to dashboard")
         router.push("/dashboard")
+      } else {
+        console.log("User is in onboarding, needs to create a club", user)
       }
     }
   }, [user, authLoading, router])
@@ -62,7 +66,16 @@ export default function OnboardingPage() {
     setIsSubmitting(true)
 
     try {
-      await apiHandler(
+      console.log("Creating club with data:", {
+        name: clubName,
+        location: clubLocation,
+        description: clubDescription,
+        userId: user.id,
+        userName: user.name,
+        userEmail: user.email,
+      })
+
+      const result = await apiHandler(
         () =>
           api.createClub({
             name: clubName,
@@ -81,13 +94,17 @@ export default function OnboardingPage() {
         },
       )
 
-      // Show success state
-      setIsComplete(true)
+      console.log("Club creation result:", result)
 
-      // Redirect after a delay
-      setTimeout(() => {
-        router.push("/dashboard")
-      }, 2000)
+      if (result) {
+        // Show success state
+        setIsComplete(true)
+
+        // Redirect after a delay
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 2000)
+      }
     } catch (error) {
       console.error("Club creation error:", error)
     } finally {

@@ -29,7 +29,9 @@ export async function middleware(req: NextRequest) {
 
   // Public paths that don't require authentication
   const publicPaths = ["/", "/auth/callback"]
-  const isPublicPath = publicPaths.includes(req.nextUrl.pathname)
+  const isPublicPath = publicPaths.some(
+    (path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith("/auth/"),
+  )
 
   // Onboarding path - only accessible for authenticated users without a club
   const isOnboardingPath = req.nextUrl.pathname === "/onboarding"
@@ -37,6 +39,7 @@ export async function middleware(req: NextRequest) {
   // If user is not signed in and the current path is not public,
   // redirect the user to the home page
   if (!session && !isPublicPath) {
+    console.log("No session, redirecting to home", req.nextUrl.pathname)
     const redirectUrl = new URL("/", req.url)
     return NextResponse.redirect(redirectUrl)
   }
@@ -44,6 +47,7 @@ export async function middleware(req: NextRequest) {
   // If user is signed in but trying to access the home page,
   // redirect to dashboard
   if (session && req.nextUrl.pathname === "/") {
+    console.log("Has session, redirecting to dashboard")
     const redirectUrl = new URL("/dashboard", req.url)
     return NextResponse.redirect(redirectUrl)
   }

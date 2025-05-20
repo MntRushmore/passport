@@ -6,19 +6,20 @@ ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE club_members ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for clubs table
--- Admins can do anything
-CREATE POLICY "Admins can do anything with clubs" ON clubs
-  FOR ALL
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM users
-    WHERE users.auth_id = auth.uid()
-    AND users.role = 'admin'
-  ));
-
--- Leaders can read their own club
-CREATE POLICY "Leaders can read their own club" ON clubs
+-- Anyone can read clubs
+CREATE POLICY "Anyone can read clubs" ON clubs
   FOR SELECT
+  USING (true);
+
+-- Users can create clubs
+CREATE POLICY "Users can create clubs" ON clubs
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (true);
+
+-- Leaders can update their own club
+CREATE POLICY "Leaders can update their own club" ON clubs
+  FOR UPDATE
   TO authenticated
   USING (EXISTS (
     SELECT 1 FROM users
@@ -27,43 +28,42 @@ CREATE POLICY "Leaders can read their own club" ON clubs
     AND users.role = 'leader'
   ));
 
--- Members can read any club
-CREATE POLICY "Anyone can read clubs" ON clubs
-  FOR SELECT
-  TO authenticated
-  USING (true);
-
--- Create policies for users table
--- Admins can do anything
-CREATE POLICY "Admins can do anything with users" ON users
-  FOR ALL
+-- Admins can delete clubs
+CREATE POLICY "Admins can delete clubs" ON clubs
+  FOR DELETE
   TO authenticated
   USING (EXISTS (
-    SELECT 1 FROM users u
-    WHERE u.auth_id = auth.uid()
-    AND u.role = 'admin'
+    SELECT 1 FROM users
+    WHERE users.auth_id = auth.uid()
+    AND users.role = 'admin'
   ));
 
--- Users can read and update their own data
-CREATE POLICY "Users can read their own data" ON users
+-- Create policies for users table
+-- Anyone can read users
+CREATE POLICY "Anyone can read users" ON users
   FOR SELECT
-  TO authenticated
-  USING (auth.uid() = auth_id);
+  USING (true);
 
+-- Users can update their own data
 CREATE POLICY "Users can update their own data" ON users
   FOR UPDATE
   TO authenticated
   USING (auth.uid() = auth_id);
 
--- Leaders can read users in their club
-CREATE POLICY "Leaders can read users in their club" ON users
-  FOR SELECT
+-- Authenticated users can create user records
+CREATE POLICY "Authenticated users can create user records" ON users
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = auth_id);
+
+-- Admins can delete users
+CREATE POLICY "Admins can delete users" ON users
+  FOR DELETE
   TO authenticated
   USING (EXISTS (
     SELECT 1 FROM users u
     WHERE u.auth_id = auth.uid()
-    AND u.role = 'leader'
-    AND u.club_id = users.club_id
+    AND u.role = 'admin'
   ));
 
 -- Create policies for workshops table
@@ -73,8 +73,8 @@ CREATE POLICY "Anyone can read workshops" ON workshops
   TO authenticated
   USING (true);
 
--- Admins can do anything with workshops
-CREATE POLICY "Admins can do anything with workshops" ON workshops
+-- Admins can create, update, delete workshops
+CREATE POLICY "Admins can manage workshops" ON workshops
   FOR ALL
   TO authenticated
   USING (EXISTS (
@@ -84,15 +84,11 @@ CREATE POLICY "Admins can do anything with workshops" ON workshops
   ));
 
 -- Create policies for submissions table
--- Admins can do anything
-CREATE POLICY "Admins can do anything with submissions" ON submissions
-  FOR ALL
+-- Anyone can read submissions
+CREATE POLICY "Anyone can read submissions" ON submissions
+  FOR SELECT
   TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM users
-    WHERE users.auth_id = auth.uid()
-    AND users.role = 'admin'
-  ));
+  USING (true);
 
 -- Leaders can create submissions for their club
 CREATE POLICY "Leaders can create submissions for their club" ON submissions
@@ -105,9 +101,9 @@ CREATE POLICY "Leaders can create submissions for their club" ON submissions
     AND users.club_id = submissions.club_id
   ));
 
--- Leaders can read submissions for their club
-CREATE POLICY "Leaders can read submissions for their club" ON submissions
-  FOR SELECT
+-- Leaders can update their club's submissions
+CREATE POLICY "Leaders can update their club's submissions" ON submissions
+  FOR UPDATE
   TO authenticated
   USING (EXISTS (
     SELECT 1 FROM users
@@ -116,26 +112,22 @@ CREATE POLICY "Leaders can read submissions for their club" ON submissions
     AND users.club_id = submissions.club_id
   ));
 
--- Members can read submissions for their club
-CREATE POLICY "Members can read submissions for their club" ON submissions
-  FOR SELECT
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM users
-    WHERE users.auth_id = auth.uid()
-    AND users.club_id = submissions.club_id
-  ));
-
--- Create policies for club_members table
--- Admins can do anything
-CREATE POLICY "Admins can do anything with club_members" ON club_members
-  FOR ALL
+-- Admins can delete submissions
+CREATE POLICY "Admins can delete submissions" ON submissions
+  FOR DELETE
   TO authenticated
   USING (EXISTS (
     SELECT 1 FROM users
     WHERE users.auth_id = auth.uid()
     AND users.role = 'admin'
   ));
+
+-- Create policies for club_members table
+-- Anyone can read club_members
+CREATE POLICY "Anyone can read club_members" ON club_members
+  FOR SELECT
+  TO authenticated
+  USING (true);
 
 -- Leaders can manage members in their club
 CREATE POLICY "Leaders can manage members in their club" ON club_members
@@ -145,15 +137,5 @@ CREATE POLICY "Leaders can manage members in their club" ON club_members
     SELECT 1 FROM users
     WHERE users.auth_id = auth.uid()
     AND users.role = 'leader'
-    AND users.club_id = club_members.club_id
-  ));
-
--- Members can read club_members for their club
-CREATE POLICY "Members can read club_members for their club" ON club_members
-  FOR SELECT
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM users
-    WHERE users.auth_id = auth.uid()
     AND users.club_id = club_members.club_id
   ));

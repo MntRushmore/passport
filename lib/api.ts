@@ -60,55 +60,61 @@ class ApiService {
     } = await supabase.auth.getSession()
     if (!session) return null
 
-    // Get the user from the database
-    const { data, error } = await supabase
-      .from("users")
-      .select(`
-        id,
-        name,
-        email,
-        avatar_url,
-        club_id,
-        role,
-        clubs:club_id (
-          name
-        )
-      `)
-      .eq("auth_id", session.user.id)
-      .single()
+    try {
+      // Get the user from the database
+      const { data, error } = await supabase
+        .from("users")
+        .select(`
+          id,
+          name,
+          email,
+          avatar_url,
+          club_id,
+          role,
+          clubs:club_id (
+            name
+          )
+        `)
+        .eq("auth_id", session.user.id)
+        .single()
 
-    if (error) {
-      if (error.code === "PGRST116") {
-        // User not found in our database, but authenticated with Supabase
-        // This is a new user who needs to create a profile
-        return {
-          id: session.user.id,
-          name:
-            session.user.user_metadata.name ||
-            session.user.user_metadata.preferred_username ||
-            session.user.email?.split("@")[0] ||
-            "",
-          email: session.user.email || "",
-          avatar: session.user.user_metadata.avatar_url || null,
-          clubId: null,
-          clubName: null,
-          role: "leader", // Default role for new users
-          isNewUser: true,
+      if (error) {
+        if (error.code === "PGRST116") {
+          // User not found in our database, but authenticated with Supabase
+          // This is a new user who needs to create a profile
+          console.log("New user detected, needs to create profile")
+          return {
+            id: session.user.id,
+            name:
+              session.user.user_metadata.name ||
+              session.user.user_metadata.preferred_username ||
+              session.user.email?.split("@")[0] ||
+              "",
+            email: session.user.email || "",
+            avatar: session.user.user_metadata.avatar_url || null,
+            clubId: null,
+            clubName: null,
+            role: "leader", // Default role for new users
+            isNewUser: true,
+          }
         }
+        console.error("Error fetching user:", error)
+        throw error
       }
-      console.error("Error fetching user:", error)
-      return null
-    }
 
-    return {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      avatar: data.avatar_url,
-      clubId: data.club_id,
-      clubName: data.clubs?.name || null,
-      role: data.role,
-      isNewUser: false,
+      return {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        avatar: data.avatar_url,
+        clubId: data.club_id,
+        clubName: data.clubs?.name || null,
+        role: data.role,
+        isNewUser: false,
+      }
+    } catch (error) {
+      console.error("Error in getCurrentUser:", error)
+      throw error
     }
   }
 
@@ -130,6 +136,9 @@ class ApiService {
   async signUpWithEmail(email: string, password: string, name: string): Promise<void> {
     const supabase = getSupabaseBrowserClient()
 
+    // Get the current origin for the redirect URL
+    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -137,6 +146,7 @@ class ApiService {
         data: {
           name,
         },
+        emailRedirectTo: redirectTo,
       },
     })
 
@@ -171,43 +181,52 @@ class ApiService {
       throw new Error("Authentication required")
     }
 
-    // Start a transaction to create both the club and user
-    // First, create the club
-    const { data: club, error: clubError } = await supabase
-      .from("clubs")
-      .insert({
-        name: data.name,
-        location: data.location || null,
-        description: data.description || null,
-      })
-      .select("id")
-      .single()
+    try {
+      // First, create the club
+      const { data: club, error: clubError } = await supabase
+        .from("clubs")
+        .insert({
+          name: data.name,
+          location: data.location || null,
+          description: data.description || null,
+        })
+        .select("id")
+        .single()
 
-    if (clubError) {
-      throw new Error(`Failed to create club: ${clubError.message}`)
+      if (clubError) {
+        throw new Error(`Failed to create club: ${clubError.message}`)
+      }
+
+      console.log("Club created:", club)
+
+      // Then, create or update the user record
+      const { data: user, error: userError } = await supabase
+        .from("users")
+        .upsert({
+          auth_id: session.user.id,
+          name: data.userName,
+          email: data.userEmail,
+          avatar_url: data.userAvatar || null,
+          club_id: club.id,
+          role: "leader", // Set as club leader
+        })
+        .select("id")
+        .single()
+
+      if (userError) {
+        // If user creation fails, we should clean up the club
+        console.error("Failed to create user:", userError)
+        await supabase.from("clubs").delete().eq("id", club.id)
+        throw new Error(`Failed to create user: ${userError.message}`)
+      }
+
+      console.log("User created/updated:", user)
+
+      return { clubId: club.id, userId: user.id }
+    } catch (error) {
+      console.error("Error in createClub:", error)
+      throw error
     }
-
-    // Then, create or update the user record
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .upsert({
-        auth_id: session.user.id,
-        name: data.userName,
-        email: data.userEmail,
-        avatar_url: data.userAvatar || null,
-        club_id: club.id,
-        role: "leader", // Set as club leader
-      })
-      .select("id")
-      .single()
-
-    if (userError) {
-      // If user creation fails, we should clean up the club
-      await supabase.from("clubs").delete().eq("id", club.id)
-      throw new Error(`Failed to create user: ${userError.message}`)
-    }
-
-    return { clubId: club.id, userId: user.id }
   }
 
   // Get all workshops

@@ -15,6 +15,9 @@ const createBrowserClient = () => {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      flowType: "pkce",
+      // Use the current site URL for redirects instead of localhost
+      redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined,
     },
   })
 }
