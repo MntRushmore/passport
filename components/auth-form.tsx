@@ -38,6 +38,7 @@ export function AuthForm() {
 
     try {
       await signInWithEmail(email, password)
+      // Don't need to do anything else here - auth provider will handle the redirect
     } catch (error) {
       console.error("Sign in error:", error)
       setFormError(error instanceof Error ? error.message : "Authentication failed")

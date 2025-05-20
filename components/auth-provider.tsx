@@ -141,38 +141,87 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
 
       try {
+        // Get the current session
         const {
           data: { session },
         } = await supabase.auth.getSession()
 
+        // If no session, clear user state and return
         if (!session) {
           setUser(null)
           setIsLoading(false)
           return
         }
 
-        // Try to load user from database
-        let userData = await loadUserFromDatabase(session.user.id)
+        // Simple approach: just get basic user data without joins
+        const { data, error } = await supabase
+          .from("users")
+          .select("id, name, email, avatar_url, club_id, role")
+          .eq("auth_id", session.user.id)
+          .single()
 
-        // If user doesn't exist in database, create one
-        if (!userData) {
-          try {
-            userData = await createUserInDatabase(session.user)
-          } catch (error) {
-            console.error("Failed to create user:", error)
+        if (error) {
+          // If user doesn't exist in the database yet
+          if (error.code === "PGRST116") {
+            // Extract basic info from auth
+            const newUser = {
+              id: session.user.id,
+              name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "New User",
+              email: session.user.email || "",
+              avatar: session.user.user_metadata?.avatar_url || null,
+              clubId: null,
+              clubName: null,
+              role: "leader",
+              isNewUser: true,
+            }
+
+            setUser(newUser)
+
+            // Redirect to onboarding if not already there
+            if (!window.location.pathname.includes("/onboarding")) {
+              router.push("/onboarding")
+            }
+            setIsLoading(false)
+            return
           }
 
-          // If we still don't have user data, use a fallback
-          if (!userData) {
-            userData = extractUserFromAuth(session.user)
+          // For other errors, log and clear user state
+          console.error("Error loading user data:", error)
+          setUser(null)
+          setIsLoading(false)
+          return
+        }
+
+        // If we have club_id, get the club name
+        let clubName = null
+        if (data.club_id) {
+          try {
+            const { data: clubData } = await supabase.from("clubs").select("name").eq("id", data.club_id).single()
+
+            if (clubData) {
+              clubName = clubData.name
+            }
+          } catch (clubError) {
+            console.error("Error fetching club name:", clubError)
           }
         }
 
-        // Set user state
+        // Set user state with the data we have
+        const userData = {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          avatar: data.avatar_url,
+          clubId: data.club_id,
+          clubName: clubName,
+          role: data.role,
+          isNewUser: false,
+        }
+
         setUser(userData)
 
         // Handle routing based on user state
-        if (userData.isNewUser || !userData.clubId) {
+        if (!data.club_id) {
           if (!window.location.pathname.includes("/onboarding")) {
             router.push("/onboarding")
           }
@@ -180,59 +229,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           router.push("/dashboard")
         }
       } catch (error) {
-        console.error("Error initializing auth:", error)
+        console.error("Error in auth initialization:", error)
         setUser(null)
       } finally {
         setIsLoading(false)
       }
     }
 
+    // Initialize auth state
     initializeAuth()
 
-    // Set up auth state change listener
+    // Set up auth state change listener with simplified logic
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event)
 
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        if (session) {
-          setIsLoading(true)
-
-          // Try to load user from database
-          let userData = await loadUserFromDatabase(session.user.id)
-
-          // If user doesn't exist in database, create one
-          if (!userData) {
-            try {
-              userData = await createUserInDatabase(session.user)
-            } catch (error) {
-              console.error("Failed to create user:", error)
-            }
-
-            // If we still don't have user data, use a fallback
-            if (!userData) {
-              userData = extractUserFromAuth(session.user)
-            }
-          }
-
-          // Set user state
-          setUser(userData)
-
-          // Handle routing based on user state
-          if (userData.isNewUser || !userData.clubId) {
-            if (!window.location.pathname.includes("/onboarding")) {
-              router.push("/onboarding")
-            }
-          } else if (window.location.pathname === "/") {
-            router.push("/dashboard")
-          }
-
-          setIsLoading(false)
-        }
-      } else if (event === "SIGNED_OUT") {
+      if (event === "SIGNED_OUT") {
         setUser(null)
         router.push("/")
+        return
+      }
+
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
+        // Just trigger initialization again on sign in
+        initializeAuth()
       }
     })
 
@@ -257,14 +278,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         setAuthError(error.message)
+        setIsLoading(false)
         throw error
       }
+
+      // Don't set isLoading to false here - let the auth state change handler do it
+      // The onAuthStateChange event will trigger initializeAuth
     } catch (error) {
       console.error("Email sign in error:", error)
       setAuthError(error instanceof Error ? error.message : "Authentication failed")
-      throw error
-    } finally {
       setIsLoading(false)
+      throw error
     }
   }
 
