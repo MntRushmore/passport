@@ -25,19 +25,28 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  const publicPaths = ["/", "/auth/callback"]
+  // Add debug logging
+  console.log(`Middleware: Path=${req.nextUrl.pathname}, HasSession=${!!session}`)
+
+  // Define public paths that don't require authentication
+  const publicPaths = ["/", "/auth/callback", "/auth/signin", "/auth/signup"]
   const isPublicPath = publicPaths.some(
     (path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith("/auth/"),
   )
 
+  // Check if user is on the onboarding path
   const isOnboardingPath = req.nextUrl.pathname === "/onboarding"
 
+  // If no session and trying to access a protected route, redirect to login
   if (!session && !isPublicPath) {
+    console.log("Middleware: No session, redirecting to login")
     const redirectUrl = new URL("/", req.url)
     return NextResponse.redirect(redirectUrl)
   }
 
+  // If user has a session and is on the home page, redirect to dashboard
   if (session && req.nextUrl.pathname === "/") {
+    console.log("Middleware: Has session on home page, redirecting to dashboard")
     const redirectUrl = new URL("/dashboard", req.url)
     return NextResponse.redirect(redirectUrl)
   }

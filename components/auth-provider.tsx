@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const supabase = getSupabaseBrowserClient()
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -198,7 +198,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error
       }
 
-      // Don't set isLoading to false here - let the auth state change handler do it
+      // If we have a user, check if they have a club and redirect accordingly
+      if (data.user) {
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("club_id")
+            .eq("auth_id", data.user.id)
+            .single()
+
+          if (!userError && userData) {
+            if (userData.club_id) {
+              router.push("/dashboard")
+            } else {
+              router.push("/onboarding")
+            }
+          }
+        } catch (err) {
+          console.error("Error checking user data after sign in:", err)
+          // Default to dashboard, the auth state change handler will redirect if needed
+          router.push("/dashboard")
+        }
+      }
     } catch (error) {
       console.error("Email sign in error:", error)
       setAuthError(error instanceof Error ? error.message : "Authentication failed")

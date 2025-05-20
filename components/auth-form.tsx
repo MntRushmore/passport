@@ -38,7 +38,18 @@ export function AuthForm() {
 
     try {
       await signInWithEmail(email, password)
-      // Don't need to do anything else here - auth provider will handle the redirect
+      // After successful sign-in, show a toast notification
+      toast({
+        title: "Sign in successful",
+        description: "Redirecting to your dashboard...",
+      })
+
+      // The auth provider will handle the redirect, but we can add a fallback
+      setTimeout(() => {
+        if (window.location.pathname === "/") {
+          router.push("/dashboard")
+        }
+      }, 2000)
     } catch (error) {
       console.error("Sign in error:", error)
       setFormError(error instanceof Error ? error.message : "Authentication failed")

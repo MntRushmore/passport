@@ -17,6 +17,7 @@ export default function AuthCallbackPage() {
   const [isProcessing, setIsProcessing] = useState(true)
 
   useEffect(() => {
+    // Update the handleCallback function to ensure proper redirection
     const handleCallback = async () => {
       try {
         const supabase = getSupabaseBrowserClient()
@@ -53,6 +54,8 @@ export default function AuthCallbackPage() {
           throw new Error("No session found")
         }
 
+        console.log("Session found, checking user data")
+
         // Check if user has a club
         try {
           const { data: userData, error: userError } = await supabase
@@ -64,6 +67,7 @@ export default function AuthCallbackPage() {
           if (userError) {
             // If user not found, redirect to onboarding
             if (userError.code === "PGRST116") {
+              console.log("User not found in database, redirecting to onboarding")
               router.push("/onboarding")
               return
             }
@@ -72,8 +76,10 @@ export default function AuthCallbackPage() {
 
           // Redirect based on whether user has a club
           if (!userData || !userData.club_id) {
+            console.log("User has no club, redirecting to onboarding")
             router.push("/onboarding")
           } else {
+            console.log("User has club, redirecting to dashboard")
             router.push("/dashboard")
           }
         } catch (err) {
