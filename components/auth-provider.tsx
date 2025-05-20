@@ -36,6 +36,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
 
+  // Add this function to the AuthProvider component to handle hard redirects:
+  const hardRedirect = (path: string) => {
+    window.location.href = path
+  }
+
   // Initialize auth state
   useEffect(() => {
     const supabase = getSupabaseBrowserClient()
@@ -209,15 +214,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (!userError && userData) {
             if (userData.club_id) {
-              router.push("/dashboard")
+              hardRedirect("/dashboard")
             } else {
-              router.push("/onboarding")
+              hardRedirect("/onboarding")
             }
+          } else {
+            // Default to onboarding if there's an error
+            hardRedirect("/onboarding")
           }
         } catch (err) {
           console.error("Error checking user data after sign in:", err)
-          // Default to dashboard, the auth state change handler will redirect if needed
-          router.push("/dashboard")
+          // Default to dashboard
+          hardRedirect("/dashboard")
         }
       }
     } catch (error) {

@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { AlertTriangle, Loader2 } from "lucide-react"
+// Import the safeNavigate function
+import { safeNavigate } from "@/lib/navigation"
 
 export default function AuthCallbackPage() {
   const router = useRouter()
@@ -68,7 +70,7 @@ export default function AuthCallbackPage() {
             // If user not found, redirect to onboarding
             if (userError.code === "PGRST116") {
               console.log("User not found in database, redirecting to onboarding")
-              router.push("/onboarding")
+              safeNavigate("/onboarding", true)
               return
             }
             throw userError
@@ -77,15 +79,15 @@ export default function AuthCallbackPage() {
           // Redirect based on whether user has a club
           if (!userData || !userData.club_id) {
             console.log("User has no club, redirecting to onboarding")
-            router.push("/onboarding")
+            safeNavigate("/onboarding", true)
           } else {
             console.log("User has club, redirecting to dashboard")
-            router.push("/dashboard")
+            safeNavigate("/dashboard", true)
           }
         } catch (err) {
           console.error("Error checking user club:", err)
           // Default to onboarding if there's an error
-          router.push("/onboarding")
+          safeNavigate("/onboarding", true)
         }
       } catch (err) {
         console.error("Error in auth callback:", err)

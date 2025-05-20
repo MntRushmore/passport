@@ -70,23 +70,27 @@ export function AuthForm() {
             if (userError.code === "PGRST116") {
               // User not found in database, redirect to onboarding
               console.log("User not found in database, redirecting to onboarding")
-              router.push("/onboarding")
-            } else {
-              throw userError
+              // Use window.location for a hard redirect instead of router.push
+              window.location.href = "/onboarding"
+              return
             }
+            throw userError
           } else if (!userData || !userData.club_id) {
             // User has no club, redirect to onboarding
             console.log("User has no club, redirecting to onboarding")
-            router.push("/onboarding")
+            window.location.href = "/onboarding"
+            return
           } else {
             // User has a club, redirect to dashboard
             console.log("User has club, redirecting to dashboard")
-            router.push("/dashboard")
+            window.location.href = "/dashboard"
+            return
           }
         } catch (err) {
           console.error("Error checking user data after sign in:", err)
           // Default to dashboard
-          router.push("/dashboard")
+          window.location.href = "/dashboard"
+          return
         }
       }
     } catch (error) {
