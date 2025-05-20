@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress"
 import { LoadingScreen } from "@/components/loading-screen"
 import { CheckCircle, MapPin, Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { getSupabaseBrowserClient } from "@/lib/supabase"
 
 export default function OnboardingPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -70,6 +71,22 @@ export default function OnboardingPage() {
         throw new Error("You must be signed in to create a club")
       }
 
+      // Check if we have a valid session before proceeding
+      const supabase = getSupabaseBrowserClient()
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+
+      if (sessionError) {
+        console.error("Session error:", sessionError)
+        throw new Error("Authentication error: " + sessionError.message)
+      }
+
+      if (!sessionData.session) {
+        console.error("No active session")
+        throw new Error("No active session. Please sign in again.")
+      }
+
+      console.log("Creating club with session:", sessionData.session.user.id)
+
       const clubData = {
         name: clubName,
         location: clubLocation,
@@ -80,16 +97,19 @@ export default function OnboardingPage() {
         userAvatar: user.avatar,
       }
 
+      // Add auth token to the request
       const response = await fetch("/api/clubs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionData.session.access_token}`,
         },
         body: JSON.stringify(clubData),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
+        console.error("Club creation API error:", errorData)
         throw new Error(errorData.message || "Failed to create club")
       }
 
@@ -137,7 +157,7 @@ export default function OnboardingPage() {
   }
 
   if (!user) {
-    return null
+    return <LoadingScreen message="Please sign in to continue..." />
   }
 
   if (isComplete) {

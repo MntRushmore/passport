@@ -36,20 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
 
-  // Extract user data from auth session
-  const extractUserFromAuth = (authUser: any): AppUser => {
-    return {
-      id: authUser.id,
-      name: authUser.user_metadata?.name || authUser.email?.split("@")[0] || "New User",
-      email: authUser.email || "",
-      avatar: authUser.user_metadata?.avatar_url || null,
-      clubId: null,
-      clubName: null,
-      role: "leader",
-      isNewUser: true,
-    }
-  }
-
   // Initialize auth state
   useEffect(() => {
     const supabase = getSupabaseBrowserClient()
@@ -78,57 +64,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return
         }
 
+        // Create a fallback user from auth data
+        const fallbackUser = {
+          id: session.user.id,
+          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "New User",
+          email: session.user.email || "",
+          avatar: session.user.user_metadata?.avatar_url || null,
+          clubId: null,
+          clubName: null,
+          role: "leader" as const,
+          isNewUser: true,
+        }
+
         try {
-          // Direct query to get user data without any joins to avoid recursion
-          const { data, error } = await supabase
+          // Try to get user data using direct query first (since RPC might not exist yet)
+          const { data: userData, error: userError } = await supabase
             .from("users")
             .select("id, name, email, avatar_url, club_id, role")
             .eq("auth_id", session.user.id)
             .single()
 
-          if (error) {
+          if (userError) {
             // If user doesn't exist in the database yet
-            if (error.code === "PGRST116") {
-              // Extract basic info from auth
-              const newUser = {
-                id: session.user.id,
-                name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "New User",
-                email: session.user.email || "",
-                avatar: session.user.user_metadata?.avatar_url || null,
-                clubId: null,
-                clubName: null,
-                role: "leader",
-                isNewUser: true,
-              }
-
-              setUser(newUser)
+            if (userError.code === "PGRST116") {
+              console.log("New user detected, needs to create profile")
+              setUser(fallbackUser)
 
               // Redirect to onboarding if not already there
               if (!window.location.pathname.includes("/onboarding")) {
                 router.push("/onboarding")
               }
-              setIsLoading(false)
-              return
+            } else {
+              console.error("Error loading user data:", userError)
+              setUser(fallbackUser)
             }
-
-            // For other errors, log and clear user state
-            console.error("Error loading user data:", error)
-            setUser(null)
             setIsLoading(false)
             return
           }
 
-          // If we have club_id, get the club name in a separate query
+          // Set user data from direct query
           let clubName = null
-          if (data.club_id) {
+          if (userData.club_id) {
             try {
-              const { data: clubData, error: clubError } = await supabase
-                .from("clubs")
-                .select("name")
-                .eq("id", data.club_id)
-                .single()
+              const { data: clubData } = await supabase.from("clubs").select("name").eq("id", userData.club_id).single()
 
-              if (!clubError && clubData) {
+              if (clubData) {
                 clubName = clubData.name
               }
             } catch (clubError) {
@@ -136,22 +116,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
 
-          // Set user state with the data we have
-          const userData = {
-            id: data.id,
-            name: data.name,
-            email: data.email,
-            avatar: data.avatar_url,
-            clubId: data.club_id,
+          setUser({
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            avatar: userData.avatar_url,
+            clubId: userData.club_id,
             clubName: clubName,
-            role: data.role,
+            role: userData.role,
             isNewUser: false,
-          }
+          })
 
-          setUser(userData)
-
-          // Handle routing based on user state
-          if (!data.club_id) {
+          // Handle routing
+          if (!userData.club_id) {
             if (!window.location.pathname.includes("/onboarding")) {
               router.push("/onboarding")
             }
@@ -159,20 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             router.push("/dashboard")
           }
         } catch (error) {
-          console.error("Error fetching user data:", error)
-
-          // Fallback to basic user info from auth
-          const fallbackUser = {
-            id: session.user.id,
-            name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "New User",
-            email: session.user.email || "",
-            avatar: session.user.user_metadata?.avatar_url || null,
-            clubId: null,
-            clubName: null,
-            role: "leader",
-            isNewUser: true,
-          }
-
+          console.error("Error in user data fetching:", error)
           setUser(fallbackUser)
 
           // Redirect to onboarding as a fallback
@@ -191,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Initialize auth state
     initializeAuth()
 
-    // Set up auth state change listener with simplified logic
+    // Set up auth state change listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -235,7 +199,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Don't set isLoading to false here - let the auth state change handler do it
-      // The onAuthStateChange event will trigger initializeAuth
     } catch (error) {
       console.error("Email sign in error:", error)
       setAuthError(error instanceof Error ? error.message : "Authentication failed")

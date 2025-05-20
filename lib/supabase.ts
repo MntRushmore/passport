@@ -28,18 +28,24 @@ export const getSupabaseBrowserClient = () => {
 }
 
 export const createServerClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error("Missing Supabase environment variables for server client")
-    throw new Error("Missing Supabase environment variables for server client")
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing Supabase environment variables for server client")
+      throw new Error("Missing Supabase environment variables for server client")
+    }
+
+    // Create a new client for each request to avoid any state issues
+    return createClient<Database>(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    })
+  } catch (error) {
+    console.error("Error creating server client:", error)
+    throw error
   }
-
-  return createClient<Database>(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  })
 }

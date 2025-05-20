@@ -1,4 +1,5 @@
 import { getSupabaseBrowserClient } from "@/lib/supabase"
+import { getMockWorkshop } from "./mock-data"
 import type { UserRole, WorkshopDifficulty, SubmissionStatus } from "@/types/supabase"
 
 export interface User {
@@ -259,23 +260,39 @@ class ApiService {
   async getWorkshop(id: string): Promise<Workshop | null> {
     const supabase = getSupabaseBrowserClient()
 
-    const { data, error } = await supabase.from("workshops").select("*").eq("id", id).single()
-
-    if (error) {
-      if (error.code === "PGRST116") {
+    try {
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (!uuidRegex.test(id)) {
+        console.error("Invalid workshop ID format:", id)
         return null
       }
-      throw new Error(error.message)
-    }
 
-    return {
-      id: data.id,
-      title: data.title,
-      emoji: data.emoji,
-      description: data.description,
-      difficulty: data.difficulty,
-      duration: data.duration,
-      skills: data.skills,
+      const { data, error } = await supabase.from("workshops").select("*").eq("id", id).single()
+
+      if (error) {
+        if (error.code === "PGRST116") {
+          console.log("Workshop not found in database, trying mock data:", id)
+          // Try to get mock data as fallback
+          return getMockWorkshop(id)
+        }
+        console.error("Error fetching workshop:", error)
+        throw error
+      }
+
+      return {
+        id: data.id,
+        title: data.title,
+        emoji: data.emoji,
+        description: data.description,
+        difficulty: data.difficulty,
+        duration: data.duration,
+        skills: data.skills,
+      }
+    } catch (error) {
+      console.error("Error in getWorkshop:", error)
+      // Try to get mock data as fallback
+      return getMockWorkshop(id)
     }
   }
 

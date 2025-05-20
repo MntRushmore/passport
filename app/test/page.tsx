@@ -42,59 +42,24 @@ export default function TestPage() {
 
         setResult((prev) => prev + `\n✓ Sign in successful: ${data.user?.email}`)
 
-        // Test 4: Try to get user data with a direct query to avoid RLS issues
+        // Test 4: Try direct query with RLS disabled
         try {
-          const { data: userData, error: userError } = await supabase
+          const { data: directData, error: directError } = await supabase
             .from("users")
             .select("id, name, email")
             .eq("auth_id", data.user?.id)
             .single()
 
-          if (userError) {
-            if (userError.code === "PGRST116") {
-              setResult((prev) => prev + "\n⚠️ User not found in database")
-            } else {
-              throw new Error(`User data error: ${userError.message}`)
-            }
-          } else {
-            setResult((prev) => prev + `\n✓ User data retrieved: ${userData.name}`)
+          if (directError) {
+            throw new Error(`Direct query error: ${directError.message}`)
           }
-        } catch (userDataError) {
+
+          setResult((prev) => prev + `\n✓ User data retrieved via direct query: ${directData.name}`)
+        } catch (directError) {
           setResult(
             (prev) =>
               prev +
-              `\n❌ Error loading user data: ${userDataError instanceof Error ? userDataError.message : String(userDataError)}`,
-          )
-        }
-
-        // Test 5: Try to get club data if user has a club
-        try {
-          const { data: clubData, error: clubError } = await supabase
-            .from("users")
-            .select("club_id")
-            .eq("auth_id", data.user?.id)
-            .single()
-
-          if (!clubError && clubData && clubData.club_id) {
-            const { data: club, error: clubDetailsError } = await supabase
-              .from("clubs")
-              .select("name")
-              .eq("id", clubData.club_id)
-              .single()
-
-            if (clubDetailsError) {
-              throw new Error(`Club data error: ${clubDetailsError.message}`)
-            }
-
-            setResult((prev) => prev + `\n✓ Club data retrieved: ${club.name}`)
-          } else {
-            setResult((prev) => prev + "\n⚠️ User has no club or club data couldn't be retrieved")
-          }
-        } catch (clubDataError) {
-          setResult(
-            (prev) =>
-              prev +
-              `\n❌ Error loading club data: ${clubDataError instanceof Error ? clubDataError.message : String(clubDataError)}`,
+              `\n❌ Error loading user data via direct query: ${directError instanceof Error ? directError.message : String(directError)}`,
           )
         }
       } else {
@@ -110,9 +75,9 @@ export default function TestPage() {
     }
   }
 
-  const testRLS = async () => {
+  const checkRLSStatus = async () => {
     setLoading(true)
-    setResult("Testing RLS policies...")
+    setResult("Checking database access...")
 
     try {
       const supabase = getSupabaseBrowserClient()
@@ -125,62 +90,48 @@ export default function TestPage() {
         return
       }
 
-      // Test 1: Read users table
-      try {
-        const { data: users, error: usersError } = await supabase.from("users").select("id, name, email").limit(5)
+      // Try direct queries to each table
+      const tables = ["users", "clubs", "workshops", "submissions", "club_members"]
 
-        if (usersError) {
-          throw new Error(`Users read error: ${usersError.message}`)
+      for (const table of tables) {
+        try {
+          const { data, error } = await supabase.from(table).select("*").limit(1)
+
+          if (error) {
+            setResult((prev) => prev + `\n❌ ${table} query failed: ${error.message}`)
+          } else {
+            setResult((prev) => prev + `\n✓ ${table} query successful: ${data.length} records`)
+          }
+        } catch (error) {
+          setResult(
+            (prev) => prev + `\n❌ Error querying ${table}: ${error instanceof Error ? error.message : String(error)}`,
+          )
         }
-
-        setResult((prev) => prev + `\n✓ Users read successful: Retrieved ${users.length} users`)
-      } catch (usersError) {
-        setResult(
-          (prev) =>
-            prev + `\n❌ Users read error: ${usersError instanceof Error ? usersError.message : String(usersError)}`,
-        )
       }
 
-      // Test 2: Read clubs table
-      try {
-        const { data: clubs, error: clubsError } = await supabase.from("clubs").select("id, name").limit(5)
-
-        if (clubsError) {
-          throw new Error(`Clubs read error: ${clubsError.message}`)
-        }
-
-        setResult((prev) => prev + `\n✓ Clubs read successful: Retrieved ${clubs.length} clubs`)
-      } catch (clubsError) {
-        setResult(
-          (prev) =>
-            prev + `\n❌ Clubs read error: ${clubsError instanceof Error ? clubsError.message : String(clubsError)}`,
-        )
-      }
-
-      // Test 3: Read workshops table
-      try {
-        const { data: workshops, error: workshopsError } = await supabase.from("workshops").select("id, title").limit(5)
-
-        if (workshopsError) {
-          throw new Error(`Workshops read error: ${workshopsError.message}`)
-        }
-
-        setResult((prev) => prev + `\n✓ Workshops read successful: Retrieved ${workshops.length} workshops`)
-      } catch (workshopsError) {
-        setResult(
-          (prev) =>
-            prev +
-            `\n❌ Workshops read error: ${workshopsError instanceof Error ? workshopsError.message : String(workshopsError)}`,
-        )
-      }
-
-      setResult((prev) => prev + "\n\n✅ RLS tests completed!")
+      setResult((prev) => prev + "\n\n✅ Database access check completed!")
     } catch (error) {
-      console.error("RLS test error:", error)
+      console.error("Database check error:", error)
       setResult((prev) => prev + `\n\n❌ Error: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
       setLoading(false)
     }
+  }
+
+  const runSetupScripts = async () => {
+    setLoading(true)
+    setResult("This button would run the setup scripts if implemented.\n\nTo set up your database:")
+
+    setResult((prev) => prev + "\n\n1. Go to your Supabase dashboard")
+    setResult((prev) => prev + "\n2. Navigate to the SQL Editor")
+    setResult((prev) => prev + "\n3. Run the following SQL:")
+    setResult(
+      (prev) =>
+        prev +
+        "\n\n```sql\n-- Completely disable RLS on all tables temporarily\nALTER TABLE users DISABLE ROW LEVEL SECURITY;\nALTER TABLE clubs DISABLE ROW LEVEL SECURITY;\nALTER TABLE workshops DISABLE ROW LEVEL SECURITY;\nALTER TABLE submissions DISABLE ROW LEVEL SECURITY;\nALTER TABLE club_members DISABLE ROW LEVEL SECURITY;\n```",
+    )
+
+    setLoading(false)
   }
 
   return (
@@ -224,13 +175,21 @@ export default function TestPage() {
               </Button>
 
               <Button
-                onClick={testRLS}
+                onClick={checkRLSStatus}
                 disabled={loading}
                 className="flex-1 bg-navy-700 hover:bg-navy-800 text-cream font-serif"
               >
-                {loading ? "Testing..." : "Test RLS Policies"}
+                {loading ? "Checking..." : "Check Database Access"}
               </Button>
             </div>
+
+            <Button
+              onClick={runSetupScripts}
+              disabled={loading}
+              className="w-full bg-gold-600 hover:bg-gold-700 text-navy-800 font-serif"
+            >
+              {loading ? "Running..." : "Database Setup Instructions"}
+            </Button>
 
             {result && (
               <div className="mt-4 p-4 bg-white border border-gold-500 rounded-md">

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, CheckCircle, Camera, Loader2 } from "lucide-react"
+import { ArrowLeft, CheckCircle, Camera, Loader2, AlertCircle } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 import { api, apiHandler, type Workshop, type Submission } from "@/lib/api"
@@ -22,6 +22,9 @@ export default function SubmitWorkshopPage() {
   const { toast } = useToast()
   const workshopId = params.workshop as string
 
+  // Use a ref for the timeout instead of state to avoid re-renders
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -30,6 +33,7 @@ export default function SubmitWorkshopPage() {
   const [notes, setNotes] = useState("")
   const [workshop, setWorkshop] = useState<Workshop | null>(null)
   const [existingSubmission, setExistingSubmission] = useState<Submission | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -38,37 +42,75 @@ export default function SubmitWorkshopPage() {
       return
     }
 
+    // Set a timeout to show an error if loading takes too long
+    timeoutRef.current = setTimeout(() => {
+      if (isLoading) {
+        setError("Loading is taking longer than expected. The workshop might not exist.")
+        setIsLoading(false)
+      }
+    }, 10000) // 10 seconds timeout
+
     // Load workshop and check for existing submission
     const loadData = async () => {
       setIsLoading(true)
+      setError(null)
+
       try {
+        // Check if workshop ID is valid UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        if (!uuidRegex.test(workshopId)) {
+          setError("Invalid workshop ID format")
+          setIsLoading(false)
+          return
+        }
+
         // Load workshop
-        const workshopData = await api.getWorkshop(workshopId)
-        setWorkshop(workshopData)
+        try {
+          const workshopData = await api.getWorkshop(workshopId)
+          if (!workshopData) {
+            setError("Workshop not found")
+            setIsLoading(false)
+            return
+          }
+          setWorkshop(workshopData)
+        } catch (workshopError) {
+          console.error("Error loading workshop:", workshopError)
+          setError("Failed to load workshop data")
+          setIsLoading(false)
+          return
+        }
 
         // Load submissions to check if this workshop is already submitted
-        const submissions = await api.getSubmissions()
-        const submission = submissions.find((s) => s.workshopId === workshopId && s.clubId === user.clubId)
+        try {
+          const submissions = await api.getSubmissions()
+          const submission = submissions.find((s) => s.workshopId === workshopId && s.clubId === user.clubId)
 
-        if (submission) {
-          setExistingSubmission(submission)
-          setEventCode(submission.eventCode)
-          setNotes(submission.notes || "")
+          if (submission) {
+            setExistingSubmission(submission)
+            setEventCode(submission.eventCode)
+            setNotes(submission.notes || "")
+          }
+        } catch (submissionError) {
+          console.error("Error loading submissions:", submissionError)
+          // Continue even if submissions can't be loaded
         }
       } catch (error) {
         console.error("Error loading data:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load workshop data. Please try again.",
-          variant: "destructive",
-        })
+        setError("Failed to load workshop data. Please try again.")
       } finally {
         setIsLoading(false)
       }
     }
 
     loadData()
-  }, [user, router, workshopId, toast])
+
+    // Clean up timeout on unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [user, router, workshopId, toast]) // Remove loadingTimeout from dependencies
 
   if (!user) {
     return null // Don't render anything while redirecting
@@ -85,13 +127,21 @@ export default function SubmitWorkshopPage() {
     )
   }
 
-  if (!workshop) {
+  if (error || !workshop) {
     return (
       <div className="min-h-screen bg-stone-100 flex flex-col items-center justify-center p-4">
         <Card className="w-full max-w-md border-gold-500 bg-cream">
+          <CardHeader className="navy-header pb-2">
+            <CardTitle className="text-cream font-serif text-lg flex items-center">
+              <AlertCircle className="mr-2 h-5 w-5" /> Error
+            </CardTitle>
+          </CardHeader>
           <CardContent className="pt-6">
-            <p className="text-center font-serif text-navy-700">Workshop not found</p>
-            <div className="flex justify-center mt-4">
+            <p className="text-center font-serif text-navy-700 mb-4">{error || "Workshop not found"}</p>
+            <p className="text-center font-mono text-sm text-stone-600 mb-6">
+              The workshop you're looking for might not exist or there was an error loading it.
+            </p>
+            <div className="flex justify-center">
               <Button asChild className="bg-navy-700 hover:bg-navy-800 text-cream font-serif">
                 <Link href="/passport">Back to Passport</Link>
               </Button>
