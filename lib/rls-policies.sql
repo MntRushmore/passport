@@ -3,7 +3,7 @@ DROP POLICY IF EXISTS "Anyone can read clubs" ON clubs;
 DROP POLICY IF EXISTS "Users can create clubs" ON clubs;
 DROP POLICY IF EXISTS "Leaders can update their own club" ON clubs;
 DROP POLICY IF EXISTS "Admins can delete clubs" ON clubs;
-DROP POLICY IF EXISTS "Authenticated users can read all users" ON users;
+DROP POLICY IF EXISTS "Anyone can read users" ON users;
 DROP POLICY IF EXISTS "Users can update their own data" ON users;
 DROP POLICY IF EXISTS "Authenticated users can create user records" ON users;
 DROP POLICY IF EXISTS "Admins can delete users" ON users;
@@ -53,8 +53,8 @@ CREATE POLICY "Admins can delete clubs" ON clubs
   ));
 
 -- Create policies for users table
--- IMPORTANT: This is the key change to prevent infinite recursion
--- Allow all authenticated users to read all user records without any checks
+-- CRITICAL FIX: Allow all users to read all user records without any checks
+-- This prevents the infinite recursion
 CREATE POLICY "Anyone can read users" ON users
   FOR SELECT
   USING (true);
@@ -71,12 +71,14 @@ CREATE POLICY "Authenticated users can create user records" ON users
   TO authenticated
   WITH CHECK (true);
 
--- Admins can delete users - FIXED to avoid recursion
+-- Admins can delete users - FIXED to avoid recursion by using a direct auth.uid() check
 CREATE POLICY "Admins can delete users" ON users
   FOR DELETE
   TO authenticated
-  USING (auth.uid() IN (
-    SELECT auth_id FROM users WHERE role = 'admin'
+  USING (EXISTS (
+    SELECT 1 FROM users u
+    WHERE u.auth_id = auth.uid() 
+    AND u.role = 'admin'
   ));
 
 -- Create policies for workshops table
@@ -106,7 +108,7 @@ CREATE POLICY "Leaders can create submissions for their club" ON submissions
   WITH CHECK (EXISTS (
     SELECT 1 FROM users
     WHERE users.auth_id = auth.uid()
-    AND users.role = 'leader'
+    AND users.role IN ('leader', 'admin')
     AND users.club_id = submissions.club_id
   ));
 
@@ -117,7 +119,7 @@ CREATE POLICY "Leaders can update their club's submissions" ON submissions
   USING (EXISTS (
     SELECT 1 FROM users
     WHERE users.auth_id = auth.uid()
-    AND users.role = 'leader'
+    AND users.role IN ('leader', 'admin')
     AND users.club_id = submissions.club_id
   ));
 
@@ -143,6 +145,6 @@ CREATE POLICY "Leaders can manage members in their club" ON club_members
   USING (EXISTS (
     SELECT 1 FROM users
     WHERE users.auth_id = auth.uid()
-    AND users.role = 'leader'
+    AND users.role IN ('leader', 'admin')
     AND users.club_id = club_members.club_id
   ));

@@ -18,9 +18,10 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const supabase = getSupabaseBrowserClient()
-
       try {
+        const supabase = getSupabaseBrowserClient()
+
+        // Check for error in URL parameters
         const errorParam = searchParams.get("error")
         const errorDescription = searchParams.get("error_description")
 
@@ -31,8 +32,8 @@ export default function AuthCallbackPage() {
           return
         }
 
+        // Exchange code for session if present
         const code = searchParams.get("code")
-
         if (code) {
           console.log("Exchanging code for session")
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
@@ -42,30 +43,43 @@ export default function AuthCallbackPage() {
           }
         }
 
-        const { data, error } = await supabase.auth.getSession()
-
-        if (error) {
-          throw error
+        // Get current session
+        const { data, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) {
+          throw sessionError
         }
 
         if (!data.session) {
           throw new Error("No session found")
         }
 
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("club_id")
-          .eq("auth_id", data.session.user.id)
-          .single()
+        // Check if user has a club
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("club_id")
+            .eq("auth_id", data.session.user.id)
+            .single()
 
-        if (userError && userError.code !== "PGRST116") {
-          throw userError
-        }
+          if (userError) {
+            // If user not found, redirect to onboarding
+            if (userError.code === "PGRST116") {
+              router.push("/onboarding")
+              return
+            }
+            throw userError
+          }
 
-        if (!userData || !userData.club_id) {
+          // Redirect based on whether user has a club
+          if (!userData || !userData.club_id) {
+            router.push("/onboarding")
+          } else {
+            router.push("/dashboard")
+          }
+        } catch (err) {
+          console.error("Error checking user club:", err)
+          // Default to onboarding if there's an error
           router.push("/onboarding")
-        } else {
-          router.push("/dashboard")
         }
       } catch (err) {
         console.error("Error in auth callback:", err)

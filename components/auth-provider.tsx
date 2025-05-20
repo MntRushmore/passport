@@ -50,89 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Load user data from database with fallback
-  const loadUserFromDatabase = async (authId: string): Promise<AppUser | null> => {
-    const supabase = getSupabaseBrowserClient()
-
-    try {
-      // First try with a simple query to avoid recursion
-      const { data: basicUserData, error: basicError } = await supabase
-        .from("users")
-        .select("id, name, email, avatar_url, club_id, role")
-        .eq("auth_id", authId)
-        .single()
-
-      if (basicError) {
-        console.error("Error loading basic user data:", basicError)
-        return null
-      }
-
-      // If we have club_id, get the club name in a separate query
-      let clubName = null
-      if (basicUserData.club_id) {
-        const { data: clubData, error: clubError } = await supabase
-          .from("clubs")
-          .select("name")
-          .eq("id", basicUserData.club_id)
-          .single()
-
-        if (!clubError && clubData) {
-          clubName = clubData.name
-        }
-      }
-
-      return {
-        id: basicUserData.id,
-        name: basicUserData.name,
-        email: basicUserData.email,
-        avatar: basicUserData.avatar_url,
-        clubId: basicUserData.club_id,
-        clubName: clubName,
-        role: basicUserData.role,
-        isNewUser: false,
-      }
-    } catch (error) {
-      console.error("Exception in loadUserFromDatabase:", error)
-      return null
-    }
-  }
-
-  // Create user in database
-  const createUserInDatabase = async (authUser: any): Promise<AppUser | null> => {
-    const supabase = getSupabaseBrowserClient()
-
-    try {
-      const userData = {
-        auth_id: authUser.id,
-        name: authUser.user_metadata?.name || authUser.email?.split("@")[0] || "New User",
-        email: authUser.email || "",
-        avatar_url: authUser.user_metadata?.avatar_url || null,
-        role: "leader",
-      }
-
-      const { data, error } = await supabase.from("users").insert(userData).select("id").single()
-
-      if (error) {
-        console.error("Error creating initial user:", error)
-        return null
-      }
-
-      return {
-        id: data.id,
-        name: userData.name,
-        email: userData.email,
-        avatar: userData.avatar_url,
-        clubId: null,
-        clubName: null,
-        role: "leader",
-        isNewUser: true,
-      }
-    } catch (error) {
-      console.error("Exception in createUserInDatabase:", error)
-      return null
-    }
-  }
-
   // Initialize auth state
   useEffect(() => {
     const supabase = getSupabaseBrowserClient()
@@ -144,7 +61,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Get the current session
         const {
           data: { session },
+          error: sessionError,
         } = await supabase.auth.getSession()
+
+        if (sessionError) {
+          console.error("Session error:", sessionError)
+          setUser(null)
+          setIsLoading(false)
+          return
+        }
 
         // If no session, clear user state and return
         if (!session) {
@@ -153,80 +78,107 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return
         }
 
-        // Simple approach: just get basic user data without joins
-        const { data, error } = await supabase
-          .from("users")
-          .select("id, name, email, avatar_url, club_id, role")
-          .eq("auth_id", session.user.id)
-          .single()
+        try {
+          // Direct query to get user data without any joins to avoid recursion
+          const { data, error } = await supabase
+            .from("users")
+            .select("id, name, email, avatar_url, club_id, role")
+            .eq("auth_id", session.user.id)
+            .single()
 
-        if (error) {
-          // If user doesn't exist in the database yet
-          if (error.code === "PGRST116") {
-            // Extract basic info from auth
-            const newUser = {
-              id: session.user.id,
-              name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "New User",
-              email: session.user.email || "",
-              avatar: session.user.user_metadata?.avatar_url || null,
-              clubId: null,
-              clubName: null,
-              role: "leader",
-              isNewUser: true,
+          if (error) {
+            // If user doesn't exist in the database yet
+            if (error.code === "PGRST116") {
+              // Extract basic info from auth
+              const newUser = {
+                id: session.user.id,
+                name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "New User",
+                email: session.user.email || "",
+                avatar: session.user.user_metadata?.avatar_url || null,
+                clubId: null,
+                clubName: null,
+                role: "leader",
+                isNewUser: true,
+              }
+
+              setUser(newUser)
+
+              // Redirect to onboarding if not already there
+              if (!window.location.pathname.includes("/onboarding")) {
+                router.push("/onboarding")
+              }
+              setIsLoading(false)
+              return
             }
 
-            setUser(newUser)
-
-            // Redirect to onboarding if not already there
-            if (!window.location.pathname.includes("/onboarding")) {
-              router.push("/onboarding")
-            }
+            // For other errors, log and clear user state
+            console.error("Error loading user data:", error)
+            setUser(null)
             setIsLoading(false)
             return
           }
 
-          // For other errors, log and clear user state
-          console.error("Error loading user data:", error)
-          setUser(null)
-          setIsLoading(false)
-          return
-        }
+          // If we have club_id, get the club name in a separate query
+          let clubName = null
+          if (data.club_id) {
+            try {
+              const { data: clubData, error: clubError } = await supabase
+                .from("clubs")
+                .select("name")
+                .eq("id", data.club_id)
+                .single()
 
-        // If we have club_id, get the club name
-        let clubName = null
-        if (data.club_id) {
-          try {
-            const { data: clubData } = await supabase.from("clubs").select("name").eq("id", data.club_id).single()
-
-            if (clubData) {
-              clubName = clubData.name
+              if (!clubError && clubData) {
+                clubName = clubData.name
+              }
+            } catch (clubError) {
+              console.error("Error fetching club name:", clubError)
             }
-          } catch (clubError) {
-            console.error("Error fetching club name:", clubError)
           }
-        }
 
-        // Set user state with the data we have
-        const userData = {
-          id: data.id,
-          name: data.name,
-          email: data.email,
-          avatar: data.avatar_url,
-          clubId: data.club_id,
-          clubName: clubName,
-          role: data.role,
-          isNewUser: false,
-        }
+          // Set user state with the data we have
+          const userData = {
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            avatar: data.avatar_url,
+            clubId: data.club_id,
+            clubName: clubName,
+            role: data.role,
+            isNewUser: false,
+          }
 
-        setUser(userData)
+          setUser(userData)
 
-        // Handle routing based on user state
-        if (!data.club_id) {
+          // Handle routing based on user state
+          if (!data.club_id) {
+            if (!window.location.pathname.includes("/onboarding")) {
+              router.push("/onboarding")
+            }
+          } else if (window.location.pathname === "/") {
+            router.push("/dashboard")
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error)
+
+          // Fallback to basic user info from auth
+          const fallbackUser = {
+            id: session.user.id,
+            name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "New User",
+            email: session.user.email || "",
+            avatar: session.user.user_metadata?.avatar_url || null,
+            clubId: null,
+            clubName: null,
+            role: "leader",
+            isNewUser: true,
+          }
+
+          setUser(fallbackUser)
+
+          // Redirect to onboarding as a fallback
           if (!window.location.pathname.includes("/onboarding")) {
             router.push("/onboarding")
           }
-        } else if (window.location.pathname === "/") {
-          router.push("/dashboard")
         }
       } catch (error) {
         console.error("Error in auth initialization:", error)

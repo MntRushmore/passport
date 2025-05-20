@@ -5,21 +5,37 @@ export async function POST(request: Request) {
   try {
     const supabase = createServerClient()
 
+    // Get session
     const {
       data: { session },
+      error: sessionError,
     } = await supabase.auth.getSession()
+
+    if (sessionError) {
+      console.error("Session error:", sessionError)
+      return NextResponse.json({ message: "Authentication error" }, { status: 401 })
+    }
 
     if (!session) {
       return NextResponse.json({ message: "Authentication required" }, { status: 401 })
     }
 
-    const body = await request.json()
+    // Parse request body safely
+    let body
+    try {
+      body = await request.json()
+    } catch (e) {
+      console.error("Error parsing request body:", e)
+      return NextResponse.json({ message: "Invalid request body" }, { status: 400 })
+    }
+
     const { name, location, description, userId, userName, userEmail, userAvatar } = body
 
     if (!name) {
       return NextResponse.json({ message: "Club name is required" }, { status: 400 })
     }
 
+    // Create club
     const { data: club, error: clubError } = await supabase
       .from("clubs")
       .insert({
@@ -35,6 +51,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: `Failed to create club: ${clubError.message}` }, { status: 500 })
     }
 
+    // Update user
     const { data: user, error: userError } = await supabase
       .from("users")
       .upsert({
@@ -50,6 +67,8 @@ export async function POST(request: Request) {
 
     if (userError) {
       console.error("Error updating user:", userError)
+
+      // Rollback club creation
       await supabase.from("clubs").delete().eq("id", club.id)
 
       return NextResponse.json({ message: `Failed to update user: ${userError.message}` }, { status: 500 })
