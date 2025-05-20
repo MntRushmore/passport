@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, ExternalLink, Check, Copy } from "lucide-react"
+import { ArrowLeft, ExternalLink, Check, Copy, AlertTriangle } from "lucide-react"
 
 export default function SlackSetupPage() {
   return (
@@ -20,17 +20,25 @@ export default function SlackSetupPage() {
 
         <Card className="border-gold-500 bg-cream mb-6 overflow-hidden">
           <CardHeader className="navy-header pb-2">
-            <CardTitle className="text-cream font-serif text-lg">Setting Up Slack Authentication</CardTitle>
+            <CardTitle className="text-cream font-serif text-lg flex items-center">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              Fix "Unsupported provider: provider is not enabled" Error
+            </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-6">
-              <p className="font-mono text-sm text-stone-700">
-                Follow these steps to enable Slack authentication for your Hack Club Food Passport application.
-              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="font-mono text-sm text-amber-800">
+                  The error{" "}
+                  <code className="bg-amber-100 px-1 rounded">Unsupported provider: provider is not enabled</code> means
+                  that the Slack authentication provider is not enabled in your Supabase project. Follow the steps below
+                  to enable it.
+                </p>
+              </div>
 
               <div className="space-y-4">
                 <h2 className="font-serif text-navy-700 text-xl">Step 1: Create a Slack App</h2>
-                <ol className="list-decimal list-inside space-y-2 font-mono text-sm text-stone-700">
+                <ol className="list-decimal list-inside space-y-4 font-mono text-sm text-stone-700">
                   <li>
                     Go to the{" "}
                     <a
@@ -42,7 +50,17 @@ export default function SlackSetupPage() {
                       Slack API Dashboard <ExternalLink className="h-3 w-3 ml-1" />
                     </a>
                   </li>
-                  <li>Click "Create New App" and choose "From scratch"</li>
+                  <li>
+                    Click "Create New App" and choose "From scratch"
+                    <div className="mt-2 border border-stone-200 rounded-lg overflow-hidden">
+                      <div className="bg-stone-50 p-2 text-xs text-stone-500">Slack API Dashboard</div>
+                      <div className="p-4 bg-white">
+                        <div className="w-full h-48 bg-stone-100 flex items-center justify-center">
+                          <span className="text-stone-400">Screenshot: Slack Create New App button</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
                   <li>
                     Enter a name for your app (e.g., "Hack Club Food Passport") and select the Slack workspace where
                     you'll develop the app
@@ -53,8 +71,18 @@ export default function SlackSetupPage() {
 
               <div className="space-y-4">
                 <h2 className="font-serif text-navy-700 text-xl">Step 2: Configure OAuth Settings</h2>
-                <ol className="list-decimal list-inside space-y-2 font-mono text-sm text-stone-700">
-                  <li>In your Slack app dashboard, navigate to "OAuth & Permissions" in the sidebar</li>
+                <ol className="list-decimal list-inside space-y-4 font-mono text-sm text-stone-700">
+                  <li>
+                    In your Slack app dashboard, navigate to "OAuth & Permissions" in the sidebar
+                    <div className="mt-2 border border-stone-200 rounded-lg overflow-hidden">
+                      <div className="bg-stone-50 p-2 text-xs text-stone-500">Slack App Dashboard</div>
+                      <div className="p-4 bg-white">
+                        <div className="w-full h-48 bg-stone-100 flex items-center justify-center">
+                          <span className="text-stone-400">Screenshot: OAuth & Permissions section</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
                   <li>
                     Under "Redirect URLs", add the following URL:
                     <div className="bg-white p-3 rounded border border-gold-500 mt-2 flex justify-between items-center">
@@ -76,14 +104,32 @@ export default function SlackSetupPage() {
                       <li>identity.email</li>
                       <li>identity.avatar</li>
                     </ul>
+                    <div className="mt-2 border border-stone-200 rounded-lg overflow-hidden">
+                      <div className="bg-stone-50 p-2 text-xs text-stone-500">Slack OAuth Scopes</div>
+                      <div className="p-4 bg-white">
+                        <div className="w-full h-48 bg-stone-100 flex items-center justify-center">
+                          <span className="text-stone-400">Screenshot: Adding OAuth Scopes</span>
+                        </div>
+                      </div>
+                    </div>
                   </li>
                 </ol>
               </div>
 
               <div className="space-y-4">
                 <h2 className="font-serif text-navy-700 text-xl">Step 3: Get Your Client Credentials</h2>
-                <ol className="list-decimal list-inside space-y-2 font-mono text-sm text-stone-700">
-                  <li>In your Slack app dashboard, navigate to "Basic Information" in the sidebar</li>
+                <ol className="list-decimal list-inside space-y-4 font-mono text-sm text-stone-700">
+                  <li>
+                    In your Slack app dashboard, navigate to "Basic Information" in the sidebar
+                    <div className="mt-2 border border-stone-200 rounded-lg overflow-hidden">
+                      <div className="bg-stone-50 p-2 text-xs text-stone-500">Slack Basic Information</div>
+                      <div className="p-4 bg-white">
+                        <div className="w-full h-48 bg-stone-100 flex items-center justify-center">
+                          <span className="text-stone-400">Screenshot: Basic Information section</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
                   <li>
                     Under "App Credentials", find your "Client ID" and "Client Secret"
                     <div className="bg-white p-3 rounded border border-gold-500 mt-2">
@@ -108,7 +154,7 @@ export default function SlackSetupPage() {
 
               <div className="space-y-4">
                 <h2 className="font-serif text-navy-700 text-xl">Step 4: Configure Supabase Auth</h2>
-                <ol className="list-decimal list-inside space-y-2 font-mono text-sm text-stone-700">
+                <ol className="list-decimal list-inside space-y-4 font-mono text-sm text-stone-700">
                   <li>
                     Go to your{" "}
                     <a
@@ -120,11 +166,62 @@ export default function SlackSetupPage() {
                       Supabase Dashboard <ExternalLink className="h-3 w-3 ml-1" />
                     </a>
                   </li>
-                  <li>Select your project</li>
-                  <li>Navigate to "Authentication" → "Providers" in the sidebar</li>
-                  <li>Find "Slack" in the list of providers and click on it</li>
-                  <li>Toggle the "Enabled" switch to on</li>
-                  <li>Enter your Slack Client ID and Client Secret from Step 3</li>
+                  <li>
+                    Select your project
+                    <div className="mt-2 border border-stone-200 rounded-lg overflow-hidden">
+                      <div className="bg-stone-50 p-2 text-xs text-stone-500">Supabase Dashboard</div>
+                      <div className="p-4 bg-white">
+                        <div className="w-full h-48 bg-stone-100 flex items-center justify-center">
+                          <span className="text-stone-400">Screenshot: Supabase Project Selection</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    Navigate to "Authentication" → "Providers" in the sidebar
+                    <div className="mt-2 border border-stone-200 rounded-lg overflow-hidden">
+                      <div className="bg-stone-50 p-2 text-xs text-stone-500">Supabase Authentication</div>
+                      <div className="p-4 bg-white">
+                        <div className="w-full h-48 bg-stone-100 flex items-center justify-center">
+                          <span className="text-stone-400">Screenshot: Authentication Providers section</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    Find "Slack" in the list of providers and click on it
+                    <div className="mt-2 border border-stone-200 rounded-lg overflow-hidden">
+                      <div className="bg-stone-50 p-2 text-xs text-stone-500">Supabase Auth Providers</div>
+                      <div className="p-4 bg-white">
+                        <div className="w-full h-48 bg-stone-100 flex items-center justify-center">
+                          <span className="text-stone-400">Screenshot: Slack provider in the list</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    <strong className="text-navy-700">Toggle the "Enabled" switch to on</strong> - This is the critical
+                    step that fixes the "provider is not enabled" error
+                    <div className="mt-2 border border-stone-200 rounded-lg overflow-hidden">
+                      <div className="bg-stone-50 p-2 text-xs text-stone-500">Enable Slack Provider</div>
+                      <div className="p-4 bg-white">
+                        <div className="w-full h-48 bg-stone-100 flex items-center justify-center">
+                          <span className="text-stone-400">Screenshot: Enabling the Slack provider</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    Enter your Slack Client ID and Client Secret from Step 3
+                    <div className="mt-2 border border-stone-200 rounded-lg overflow-hidden">
+                      <div className="bg-stone-50 p-2 text-xs text-stone-500">Slack Provider Configuration</div>
+                      <div className="p-4 bg-white">
+                        <div className="w-full h-48 bg-stone-100 flex items-center justify-center">
+                          <span className="text-stone-400">Screenshot: Entering Client ID and Secret</span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
                   <li>Click "Save"</li>
                 </ol>
               </div>

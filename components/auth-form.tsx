@@ -21,6 +21,7 @@ export function AuthForm() {
   const [name, setName] = useState("")
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin")
   const [showDebug, setShowDebug] = useState(false)
+  const [slackDisabled, setSlackDisabled] = useState(false)
 
   const router = useRouter()
   const { signInWithSlack, signInWithEmail, signUpWithEmail, authError, clearAuthError, debugInfo } = useAuth()
@@ -36,6 +37,11 @@ export function AuthForm() {
     } catch (error) {
       console.error("Login error:", error)
       setIsLoading(false)
+
+      // If we get the "provider is not enabled" error, disable the Slack button
+      if (error instanceof Error && error.message.includes("provider is not enabled")) {
+        setSlackDisabled(true)
+      }
     }
   }
 
@@ -103,15 +109,26 @@ export function AuthForm() {
         )}
 
         <div className="space-y-4">
-          <Button
-            onClick={handleSlackLogin}
-            disabled={isLoading}
-            className="w-full bg-[#4A154B] hover:bg-[#3e1240] text-white font-mono text-sm py-6 relative overflow-hidden group"
-          >
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(255,255,255,0)_0%,_rgba(255,255,255,0.1)_50%,_rgba(255,255,255,0)_100%)] translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-            <Slack className="mr-2 h-5 w-5" />
-            {isLoading ? "Authenticating..." : "Sign in with Slack"}
-          </Button>
+          {!slackDisabled && (
+            <Button
+              onClick={handleSlackLogin}
+              disabled={isLoading || slackDisabled}
+              className="w-full bg-[#4A154B] hover:bg-[#3e1240] text-white font-mono text-sm py-6 relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(255,255,255,0)_0%,_rgba(255,255,255,0.1)_50%,_rgba(255,255,255,0)_100%)] translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              <Slack className="mr-2 h-5 w-5" />
+              {isLoading ? "Authenticating..." : "Sign in with Slack"}
+            </Button>
+          )}
+
+          {slackDisabled && (
+            <Alert className="bg-amber-50 border-amber-200 mb-4">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-amber-800">
+                Slack authentication is not enabled. Please use email login or see the admin guide to enable Slack.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {debugInfo && (
             <div className="relative">
@@ -138,7 +155,7 @@ export function AuthForm() {
               <span className="w-full border-t border-gold-500"></span>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-cream px-2 text-stone-600 font-mono">Or continue with email</span>
+              <span className="bg-cream px-2 text-stone-600 font-mono">Continue with email</span>
             </div>
           </div>
 
