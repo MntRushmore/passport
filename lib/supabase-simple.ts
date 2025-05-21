@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/supabase"
 
-// Create a single instance for the browser
+// Fix the createBrowserClient function to use the correct auth options
 const createBrowserClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -10,13 +10,7 @@ const createBrowserClient = () => {
     throw new Error("Missing Supabase environment variables")
   }
 
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  })
+  return createClient<Database>(supabaseUrl, supabaseAnonKey)
 }
 
 // Singleton pattern to avoid multiple instances

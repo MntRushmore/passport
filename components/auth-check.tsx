@@ -32,7 +32,7 @@ export default function AuthCheck({ children }: { children: React.ReactNode }) {
     }
 
     checkAuth()
-  }, [router])
+  }, []) // Remove router from dependency array
 
   if (isLoading) {
     return <LoadingScreen message="Checking authentication..." />

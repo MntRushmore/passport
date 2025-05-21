@@ -148,7 +148,7 @@ export default function DashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
-              <Progress value={progressPercentage} className="h-3 bg-stone-200" indicatorClassName="bg-navy-700" />
+              <Progress value={progressPercentage} className="h-3 bg-stone-200" />
               <p className="text-xs font-mono mt-3 text-stone-600">
                 {completedCount === enhancedWorkshops.length
                   ? "All workshops completed!"
