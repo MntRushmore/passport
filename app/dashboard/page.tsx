@@ -23,7 +23,7 @@ export default function DashboardPage() {
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!user) {
-      router.push("/")
+      router.push("/login")
       return
     }
 
@@ -92,11 +92,9 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-serif font-bold text-navy-700">Dashboard</h1>
 
           <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8 border-2 border-gold-500">
-              <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-              <AvatarFallback className="bg-navy-700 text-cream text-xl">{user.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <SignOutButton />
+            <Button asChild className="bg-navy-700 hover:bg-navy-800 text-cream font-serif">
+              <Link href="/passport">View Passport</Link>
+            </Button>
           </div>
         </div>
 
@@ -298,6 +296,10 @@ export default function DashboardPage() {
             </Button>
           </div>
         )}
+
+        <div className="flex justify-end mt-6">
+          <SignOutButton />
+        </div>
       </div>
     </div>
   )

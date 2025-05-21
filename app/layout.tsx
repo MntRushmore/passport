@@ -1,39 +1,26 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Merriweather, Roboto_Mono } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
 import { AuthProvider } from "@/components/auth-provider"
 
-const merriweather = Merriweather({
-  weight: ["300", "400", "700", "900"],
-  subsets: ["latin"],
-  variable: "--font-serif",
-})
-
-const robotoMono = Roboto_Mono({
-  weight: ["400", "500", "700"],
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Hack Club Food Passport",
-  description: "Track your culinary workshop adventures with Hack Club",
+  description: "Track your culinary coding adventures with Hack Club",
     generator: 'v0.dev'
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={`${merriweather.variable} ${robotoMono.variable} font-sans`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <AuthProvider>{children}</AuthProvider>
-        </ThemeProvider>
+      <body className={inter.className}>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   )

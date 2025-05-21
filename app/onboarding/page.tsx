@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { getSupabase } from "@/lib/supabase-simple"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -15,7 +16,6 @@ import { Progress } from "@/components/ui/progress"
 import { LoadingScreen } from "@/components/loading-screen"
 import { CheckCircle, MapPin, Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { getSupabaseBrowserClient } from "@/lib/supabase"
 
 export default function OnboardingPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -72,7 +72,7 @@ export default function OnboardingPage() {
       }
 
       // Check if we have a valid session before proceeding
-      const supabase = getSupabaseBrowserClient()
+      const supabase = getSupabase()
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
 
       if (sessionError) {
@@ -167,7 +167,7 @@ export default function OnboardingPage() {
           <CardContent className="pt-6 text-center">
             <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
             <h2 className="text-2xl font-serif text-navy-700 mb-2">Welcome to Hack Club!</h2>
-            <p className="font-mono text-sm text-stone-600 mb-6">
+            <p className="mt-2 text-stone-600 font-mono text-sm">
               Your club has been created successfully. You're now ready to start your food passport journey!
             </p>
             <div className="flex justify-center">

@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { getSupabaseBrowserClient } from "@/lib/supabase"
-import type { User } from "@/types/supabase"
+import { getSupabase, getSupabaseBrowserClient } from "@/lib/supabase-simple"
+import type { User } from "@supabase/supabase-js"
 import { performCompleteSignOut } from "@/lib/auth-handler"
 
 export interface AppUser {
@@ -17,8 +17,19 @@ export interface AppUser {
   isNewUser?: boolean
 }
 
+// Define a simple user type for the context
+type AuthUser = {
+  id: string
+  name: string
+  email: string
+  club?: string
+  clubId?: string
+  role?: string
+  avatar?: string
+}
+
 type AuthContextType = {
-  user: AppUser | null
+  user: AuthUser | null
   signInWithEmail: (email: string, password: string) => Promise<void>
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>
   signOut: () => Promise<void>
@@ -29,10 +40,20 @@ type AuthContextType = {
   clearAuthError: () => void
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  signInWithEmail: async () => {},
+  signUpWithEmail: async () => {},
+  signOut: async () => {},
+  logout: async () => {},
+  isAuthenticated: false,
+  isLoading: true,
+  authError: null,
+  clearAuthError: () => {},
+})
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
@@ -42,148 +63,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = path
   }
 
-  // Initialize auth state
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient()
-
-    const initializeAuth = async () => {
-      setIsLoading(true)
-
+    const fetchUser = async () => {
       try {
-        // Get the current session
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession()
+        const supabase = getSupabase()
+        const { data: authData } = await supabase.auth.getUser()
 
-        if (sessionError) {
-          console.error("Session error:", sessionError)
+        if (!authData.user) {
           setUser(null)
           setIsLoading(false)
           return
         }
 
-        // If no session, clear user state and return
-        if (!session) {
-          setUser(null)
-          setIsLoading(false)
-          return
-        }
+        // Get user profile data
+        const { data: profileData } = await supabase.from("users").select("*").eq("auth_id", authData.user.id).single()
 
-        // Create a fallback user from auth data
-        const fallbackUser = {
-          id: session.user.id,
-          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "New User",
-          email: session.user.email || "",
-          avatar: session.user.user_metadata?.avatar_url || null,
-          clubId: null,
-          clubName: null,
-          role: "leader" as const,
-          isNewUser: true,
-        }
-
-        try {
-          // Try to get user data using direct query first (since RPC might not exist yet)
-          const { data: userData, error: userError } = await supabase
-            .from("users")
-            .select("id, name, email, avatar_url, club_id, role")
-            .eq("auth_id", session.user.id)
-            .single()
-
-          if (userError) {
-            // If user doesn't exist in the database yet
-            if (userError.code === "PGRST116") {
-              console.log("New user detected, needs to create profile")
-              setUser(fallbackUser)
-
-              // Redirect to onboarding if not already there
-              if (!window.location.pathname.includes("/onboarding")) {
-                router.push("/onboarding")
-              }
-            } else {
-              console.error("Error loading user data:", userError)
-              setUser(fallbackUser)
-            }
-            setIsLoading(false)
-            return
-          }
-
-          // Set user data from direct query
-          let clubName = null
-          if (userData.club_id) {
-            try {
-              const { data: clubData } = await supabase.from("clubs").select("name").eq("id", userData.club_id).single()
-
-              if (clubData) {
-                clubName = clubData.name
-              }
-            } catch (clubError) {
-              console.error("Error fetching club name:", clubError)
-            }
-          }
-
+        if (profileData) {
           setUser({
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
-            avatar: userData.avatar_url,
-            clubId: userData.club_id,
-            clubName: clubName,
-            role: userData.role,
-            isNewUser: false,
+            id: authData.user.id,
+            name: profileData.name || authData.user.user_metadata?.name || "",
+            email: authData.user.email || "",
+            club: profileData.club_name,
+            clubId: profileData.club_id,
+            role: profileData.role,
+            avatar: profileData.avatar_url,
           })
-
-          // Handle routing
-          if (!userData.club_id) {
-            if (!window.location.pathname.includes("/onboarding")) {
-              router.push("/onboarding")
-            }
-          } else if (window.location.pathname === "/") {
-            router.push("/dashboard")
-          }
-        } catch (error) {
-          console.error("Error in user data fetching:", error)
-          setUser(fallbackUser)
-
-          // Redirect to onboarding as a fallback
-          if (!window.location.pathname.includes("/onboarding")) {
-            router.push("/onboarding")
-          }
+        } else {
+          // If no profile data, just use auth data
+          setUser({
+            id: authData.user.id,
+            name: authData.user.user_metadata?.name || "",
+            email: authData.user.email || "",
+          })
         }
       } catch (error) {
-        console.error("Error in auth initialization:", error)
+        console.error("Error fetching user:", error)
         setUser(null)
       } finally {
         setIsLoading(false)
       }
     }
 
-    // Initialize auth state
-    initializeAuth()
+    fetchUser()
 
     // Set up auth state change listener
+    const supabase = getSupabase()
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event)
-
-      if (event === "SIGNED_OUT") {
-        setUser(null)
-        router.push("/")
-        return
-      }
-
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
-        // Just trigger initialization again on sign in
-        initializeAuth()
-      }
+    } = supabase.auth.onAuthStateChange(() => {
+      fetchUser()
     })
 
-    // Cleanup subscription
     return () => {
       subscription.unsubscribe()
     }
-  }, [router])
+  }, [])
 
   // Sign in with email
   const signInWithEmail = async (email: string, password: string) => {
@@ -332,10 +266,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
-}
+export const useAuth = () => useContext(AuthContext)

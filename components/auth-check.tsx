@@ -3,13 +3,11 @@
 import type React from "react"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { getSupabase } from "@/lib/supabase-simple"
 import { LoadingScreen } from "@/components/loading-screen"
 
 export default function AuthCheck({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -32,7 +30,7 @@ export default function AuthCheck({ children }: { children: React.ReactNode }) {
     }
 
     checkAuth()
-  }, []) // Remove router from dependency array
+  }, [])
 
   if (isLoading) {
     return <LoadingScreen message="Checking authentication..." />
