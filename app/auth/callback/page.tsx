@@ -74,12 +74,12 @@ export default function AuthCallbackPage() {
               const userData = {
                 auth_id: user.id,
                 name:
-                  user.user_metadata.name ||
-                  user.user_metadata.full_name ||
+                  user.user_metadata?.name ||
+                  user.user_metadata?.full_name ||
                   user.email?.split("@")[0] ||
                   "Hack Club Member",
                 email: user.email || "",
-                avatar_url: user.user_metadata.avatar_url,
+                avatar_url: user.user_metadata?.avatar_url,
                 role: "leader",
               }
 

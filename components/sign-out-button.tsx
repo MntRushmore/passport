@@ -15,7 +15,9 @@ export function SignOutButton() {
       await supabase.auth.signOut()
 
       // Force a hard navigation to home
-      window.location.href = "/"
+      if (typeof window !== "undefined") {
+        window.location.href = "/"
+      }
     } catch (error) {
       console.error("Error signing out:", error)
     } finally {

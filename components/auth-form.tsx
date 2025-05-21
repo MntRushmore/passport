@@ -1,21 +1,23 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useRouter } from "next/navigation"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/components/auth-provider"
 import { Loader2, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { initiateSlackAuth } from "@/lib/auth-handler"
+import { initiateSlackAuth, performCompleteSignOut } from "@/lib/auth-handler"
 
 export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  const router = useRouter()
   const { authError, clearAuthError, isLoading: authLoading } = useAuth()
   const { toast } = useToast()
+
+  useEffect(() => {
+    setIsLoading(authLoading)
+  }, [authLoading])
 
   const handleSlackSignIn = async () => {
     setFormError(null)
@@ -31,6 +33,12 @@ export function AuthForm() {
       console.error("Sign in error:", error)
       setFormError(error instanceof Error ? error.message : "Authentication failed")
       setIsLoading(false)
+    }
+  }
+
+  const handleClearAllAuth = async () => {
+    if (typeof window !== "undefined" && window.confirm("This will clear all authentication data. Continue?")) {
+      await performCompleteSignOut()
     }
   }
 
@@ -76,20 +84,22 @@ export function AuthForm() {
             )}
           </Button>
         </div>
-
-        <div className="mt-6 text-center">
-          <p className="text-xs font-mono text-stone-500">
-            By signing in, you agree to the{" "}
-            <a href="#" className="text-navy-700 hover:underline">
-              Terms of Service
-            </a>{" "}
-            and{" "}
-            <a href="#" className="text-navy-700 hover:underline">
-              Privacy Policy
-            </a>
-          </p>
-        </div>
       </CardContent>
+      <CardFooter className="flex flex-col">
+        <p className="text-xs font-mono text-stone-500 text-center">
+          By signing in, you agree to the{" "}
+          <a href="#" className="text-navy-700 hover:underline">
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a href="#" className="text-navy-700 hover:underline">
+            Privacy Policy
+          </a>
+        </p>
+        <Button onClick={handleClearAllAuth} variant="outline" size="sm" className="mt-4 text-xs">
+          Clear All Auth Data
+        </Button>
+      </CardFooter>
     </Card>
   )
 }

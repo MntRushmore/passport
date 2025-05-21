@@ -10,7 +10,7 @@ export async function initiateSlackAuth(): Promise<void> {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "slack",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
       },
     })
 
@@ -29,9 +29,11 @@ export async function initiateSlackAuth(): Promise<void> {
  * Perform a hard redirect with a delay to ensure auth state is settled
  */
 export function performDelayedRedirect(path: string, delay = 500): void {
-  setTimeout(() => {
-    window.location.href = path
-  }, delay)
+  if (typeof window !== "undefined") {
+    setTimeout(() => {
+      window.location.href = path
+    }, delay)
+  }
 }
 
 /**
@@ -43,23 +45,25 @@ export async function performCompleteSignOut(): Promise<void> {
     await supabase.auth.signOut()
 
     // Clear any local storage or cookies
-    try {
-      localStorage.removeItem("supabase.auth.token")
-      localStorage.removeItem("auth_backup")
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("supabase.auth.token")
+        localStorage.removeItem("auth_backup")
 
-      // Clear any other auth-related items
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key && (key.includes("supabase") || key.includes("sb-") || key.includes("auth"))) {
-          localStorage.removeItem(key)
+        // Clear any other auth-related items
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key.includes("supabase") || key.includes("sb-") || key.includes("auth"))) {
+            localStorage.removeItem(key)
+          }
         }
+      } catch (e) {
+        console.error("Error clearing localStorage:", e)
       }
-    } catch (e) {
-      console.error("Error clearing localStorage:", e)
-    }
 
-    // Force a hard navigation to clear any client-side state
-    window.location.href = "/"
+      // Force a hard navigation to clear any client-side state
+      window.location.href = "/"
+    }
   } catch (error) {
     console.error("Error during sign out:", error)
     throw error

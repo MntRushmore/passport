@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "slack",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
         },
       })
 
@@ -158,7 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Sign out error:", error)
       // Force a hard redirect to home as a fallback
-      window.location.href = "/"
+      if (typeof window !== "undefined") {
+        window.location.href = "/"
+      }
     } finally {
       setIsLoading(false)
     }
