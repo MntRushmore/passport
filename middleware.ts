@@ -21,10 +21,22 @@ export async function middleware(req: NextRequest) {
   res.headers.set("Content-Security-Policy", cspHeader)
 
   // Define public paths that don't require authentication
-  const publicPaths = ["/", "/login", "/auth/callback", "/auth/signin", "/auth/signup", "/test"]
-  const isPublicPath = publicPaths.some(
-    (path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith("/auth/"),
-  )
+  const publicPaths = [
+    "/",
+    "/login",
+    "/auth/callback",
+    "/api/auth/callback",
+    "/auth/signin",
+    "/auth/signup",
+    "/test",
+  ]
+  const isPublicPath =
+    publicPaths.some(
+      (path) =>
+        req.nextUrl.pathname === path ||
+        req.nextUrl.pathname.startsWith(path.endsWith("/") ? path : path + "/")
+    ) ||
+    req.nextUrl.pathname.startsWith("/api/auth/")
 
   // For public paths, we don't need to check authentication
   if (isPublicPath) {
