@@ -21,14 +21,12 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "slack",
         options: {
-          redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
+          redirectTo: "https://v0-hack-club-passport-app.vercel.app/auth/callback",
         },
       })
 
       if (error) throw error
 
-      // The user will be redirected to Slack for authentication
-      // After authentication, they will be redirected back to the callback URL
     } catch (err) {
       console.error("Login error:", err)
       setError(err instanceof Error ? err.message : "Failed to sign in with Slack")
