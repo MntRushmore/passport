@@ -18,6 +18,8 @@ export default function LoginPage() {
     try {
       const supabase = getSupabase()
 
+      console.log("Redirecting to Slack...")
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "slack",
         options: {
