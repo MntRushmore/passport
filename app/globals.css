@@ -432,5 +432,10 @@
 }
 
 .texture-overlay {
-  .absolute.inset-0.opacity-10.mix-blend-overlay.bg-[url('/noise-texture.png')].pointer-events-none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+  mix-blend-mode: overlay;
+  background-image: url('/noise-texture.png');
+  pointer-events: none;
 }
