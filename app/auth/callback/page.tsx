@@ -1,17 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { getSupabaseBrowserClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { AlertTriangle, Loader2 } from "lucide-react"
-// Import the safeNavigate function
-import { safeNavigate } from "@/lib/navigation"
+import { performDelayedRedirect } from "@/lib/auth-handler"
 
 export default function AuthCallbackPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [error, setError] = useState<string | null>(null)
@@ -70,7 +68,7 @@ export default function AuthCallbackPage() {
             // If user not found, redirect to onboarding
             if (userError.code === "PGRST116") {
               console.log("User not found in database, redirecting to onboarding")
-              safeNavigate("/onboarding", true)
+              performDelayedRedirect("/onboarding")
               return
             }
             throw userError
@@ -79,15 +77,15 @@ export default function AuthCallbackPage() {
           // Redirect based on whether user has a club
           if (!userData || !userData.club_id) {
             console.log("User has no club, redirecting to onboarding")
-            safeNavigate("/onboarding", true)
+            performDelayedRedirect("/onboarding")
           } else {
             console.log("User has club, redirecting to dashboard")
-            safeNavigate("/dashboard", true)
+            performDelayedRedirect("/dashboard")
           }
         } catch (err) {
           console.error("Error checking user club:", err)
           // Default to onboarding if there's an error
-          safeNavigate("/onboarding", true)
+          performDelayedRedirect("/onboarding")
         }
       } catch (err) {
         console.error("Error in auth callback:", err)
@@ -104,7 +102,7 @@ export default function AuthCallbackPage() {
     }
 
     handleCallback()
-  }, [router, toast, searchParams])
+  }, [toast, searchParams])
 
   if (error) {
     return (

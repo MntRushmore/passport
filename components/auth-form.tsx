@@ -14,6 +14,7 @@ import { Mail, Loader2, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getSupabaseBrowserClient } from "@/lib/supabase"
+import { handleSignIn, performDelayedRedirect } from "@/lib/auth-handler"
 
 export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -24,7 +25,7 @@ export function AuthForm() {
   const [formError, setFormError] = useState<string | null>(null)
 
   const router = useRouter()
-  const { signInWithEmail, signUpWithEmail, authError, clearAuthError, isLoading: authLoading } = useAuth()
+  const { authError, clearAuthError, isLoading: authLoading } = useAuth()
   const { toast } = useToast()
 
   useEffect(() => {
@@ -38,17 +39,13 @@ export function AuthForm() {
     setIsLoading(true)
 
     try {
-      // Direct Supabase sign-in instead of using the auth provider
-      const supabase = getSupabaseBrowserClient()
+      // Use our simplified auth handler
+      const result = await handleSignIn(email, password)
 
-      // Sign in with Supabase directly
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        throw error
+      if (!result.success) {
+        setFormError(result.error || "Authentication failed")
+        setIsLoading(false)
+        return
       }
 
       // Show success toast
@@ -57,42 +54,8 @@ export function AuthForm() {
         description: "Redirecting to your dashboard...",
       })
 
-      // Check if user has a club and redirect accordingly
-      if (data.user) {
-        try {
-          const { data: userData, error: userError } = await supabase
-            .from("users")
-            .select("club_id")
-            .eq("auth_id", data.user.id)
-            .single()
-
-          if (userError) {
-            if (userError.code === "PGRST116") {
-              // User not found in database, redirect to onboarding
-              console.log("User not found in database, redirecting to onboarding")
-              // Use window.location for a hard redirect instead of router.push
-              window.location.href = "/onboarding"
-              return
-            }
-            throw userError
-          } else if (!userData || !userData.club_id) {
-            // User has no club, redirect to onboarding
-            console.log("User has no club, redirecting to onboarding")
-            window.location.href = "/onboarding"
-            return
-          } else {
-            // User has a club, redirect to dashboard
-            console.log("User has club, redirecting to dashboard")
-            window.location.href = "/dashboard"
-            return
-          }
-        } catch (err) {
-          console.error("Error checking user data after sign in:", err)
-          // Default to dashboard
-          window.location.href = "/dashboard"
-          return
-        }
-      }
+      // Perform a delayed redirect to ensure auth state is settled
+      performDelayedRedirect(result.redirectTo)
     } catch (error) {
       console.error("Sign in error:", error)
       setFormError(error instanceof Error ? error.message : "Authentication failed")
@@ -117,7 +80,7 @@ export function AuthForm() {
     }
 
     try {
-      // Direct Supabase sign-up instead of using the auth provider
+      // Direct Supabase sign-up
       const supabase = getSupabaseBrowserClient()
 
       // Sign up with Supabase directly
@@ -154,12 +117,12 @@ export function AuthForm() {
             description: "Redirecting to onboarding...",
           })
 
-          // Redirect to onboarding
-          router.push("/onboarding")
+          // Perform a delayed redirect
+          performDelayedRedirect("/onboarding")
         } catch (err) {
           console.error("Error creating user record:", err)
           // Still redirect to onboarding
-          router.push("/onboarding")
+          performDelayedRedirect("/onboarding")
         }
       }
     } catch (error) {
