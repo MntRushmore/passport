@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
 import { Loader2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const supabase = createClientComponentClient()
+  const supabase = createPagesBrowserClient()
 
   const handleSlackLogin = async () => {
     setIsLoading(true)

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -17,7 +17,7 @@ export default function AuthCallbackPage() {
   const [isProcessing, setIsProcessing] = useState(true)
 
   useEffect(() => {
-    const supabase = createClientComponentClient()
+    const supabase = createPagesBrowserClient()
     const handleCallback = async () => {
       try {
 
