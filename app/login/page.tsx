@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { createClientComponentClient } from "@supabase/ssr/react"
+import { createClientComponentClient } from "@supabase/ssr"
 import { Loader2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
