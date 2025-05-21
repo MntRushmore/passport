@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { getSupabase } from "@/lib/supabase-simple"
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const cookieStore = cookies()
-    const supabase = getSupabase()
+    const supabase = createRouteHandlerClient({ cookies: request.cookies })
 
     // Get session from server
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
@@ -21,7 +19,7 @@ export async function GET() {
     }
 
     // Get all cookies for debugging
-    const allCookies = cookieStore.getAll()
+    const allCookies = request.cookies.getAll()
     const cookieNames = allCookies.map((cookie) => cookie.name)
 
     // Check for auth-related cookies
