@@ -11,13 +11,13 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
+  const supabase = createClientComponentClient()
+
   const handleSlackLogin = async () => {
     setIsLoading(true)
     setError("")
 
     try {
-      const supabase = createClientComponentClient()
-
       console.log("Redirecting to Slack...")
 
       const { error } = await supabase.auth.signInWithOAuth({

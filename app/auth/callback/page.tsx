@@ -17,10 +17,9 @@ export default function AuthCallbackPage() {
   const [isProcessing, setIsProcessing] = useState(true)
 
   useEffect(() => {
-
+    const supabase = createClientComponentClient()
     const handleCallback = async () => {
       try {
-        const supabase = createClientComponentClient()
 
         const errorParam = searchParams.get("error")
         const errorDescription = searchParams.get("error_description")
