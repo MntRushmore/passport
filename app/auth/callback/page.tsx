@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { getSupabase } from "@/lib/supabase-simple"
+import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -20,7 +20,7 @@ export default function AuthCallbackPage() {
 
     const handleCallback = async () => {
       try {
-        const supabase = getSupabase()
+        const supabase = createBrowserSupabaseClient()
 
         const errorParam = searchParams.get("error")
         const errorDescription = searchParams.get("error_description")
