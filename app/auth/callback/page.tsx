@@ -17,12 +17,11 @@ export default function AuthCallbackPage() {
   const [isProcessing, setIsProcessing] = useState(true)
 
   useEffect(() => {
-    // Update the handleCallback function to ensure proper redirection
+
     const handleCallback = async () => {
       try {
         const supabase = getSupabase()
 
-        // Check for error in URL parameters
         const errorParam = searchParams.get("error")
         const errorDescription = searchParams.get("error_description")
 
@@ -33,7 +32,7 @@ export default function AuthCallbackPage() {
           return
         }
 
-        // Exchange code for session if present
+  
         const code = searchParams.get("code")
         if (code) {
           console.log("Exchanging code for session")
@@ -56,7 +55,7 @@ export default function AuthCallbackPage() {
 
         console.log("Session found, checking user data")
 
-        // Check if user has a club
+  
         try {
           const { data: userData, error: userError } = await supabase
             .from("users")
@@ -65,11 +64,10 @@ export default function AuthCallbackPage() {
             .single()
 
           if (userError) {
-            // If user not found, create a new user record
             if (userError.code === "PGRST116") {
               console.log("User not found in database, creating new user record")
 
-              // Create user record from Slack data
+
               const { user } = data.session
               const userData = {
                 auth_id: user.id,
@@ -92,7 +90,7 @@ export default function AuthCallbackPage() {
             throw userError
           }
 
-          // Redirect based on whether user has a club
+        
           if (!userData || !userData.club_id) {
             console.log("User has no club, redirecting to onboarding")
             performDelayedRedirect("/onboarding")
@@ -102,7 +100,6 @@ export default function AuthCallbackPage() {
           }
         } catch (err) {
           console.error("Error checking user club:", err)
-          // Default to onboarding if there's an error
           performDelayedRedirect("/onboarding")
         }
       } catch (err) {
