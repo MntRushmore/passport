@@ -6,13 +6,15 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
+  // Update the CSP header to allow Vercel's feedback script
+
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel.live;
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: https:;
     font-src 'self';
-    connect-src 'self' https://*.supabase.co;
+    connect-src 'self' https://*.supabase.co https://*.vercel.live;
     frame-src 'self' https://*.supabase.co;
     form-action 'self';
   `

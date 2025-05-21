@@ -436,3 +436,11 @@
   border-bottom-width: 2px;
   border-right-width: 2px;
 }
+
+/* Find the texture overlay div class that uses the noise-texture.png */
+.texture-overlay {
+  /* Change this line: */
+  /* .absolute inset-0 opacity-10 mix-blend-overlay bg-[url('/noise-texture.png\')] pointer-events-none */
+  /* To use the correct path: */
+  .absolute.inset-0.opacity-10.mix-blend-overlay.bg-[url('/noise-texture.png\')].pointer-events-none;\
+}

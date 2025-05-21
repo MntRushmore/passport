@@ -146,16 +146,48 @@ export async function performCompleteSignOut(): Promise<void> {
       console.error("Failed to clear localStorage:", e)
     }
 
-    // 4. Clear cookies related to auth
-    document.cookie.split(";").forEach((cookie) => {
-      const [name] = cookie.trim().split("=")
-      if (
-        name &&
-        (name.includes("supabase") || name.includes("auth") || name.includes("session") || name.includes("sb-"))
-      ) {
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`
-      }
-    })
+    // 4. Clear cookies related to auth - update this section
+    try {
+      // Clear cookies by setting them to expire in the past
+      // This is more thorough than the previous approach
+      const cookiesToClear = [
+        "sb-access-token",
+        "sb-refresh-token",
+        "supabase-auth-token",
+        "sb-provider-token",
+        "sb-auth-token",
+        // Add any other potential cookie names
+        "sb-",
+        "supabase-",
+      ]
+
+      // Try multiple approaches to clear cookies
+      cookiesToClear.forEach((cookieName) => {
+        // Clear with path=/
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`
+
+        // Also try with domain specification if we're on a specific domain
+        const domain = window.location.hostname
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${domain};`
+
+        // Also try without path
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT;`
+      })
+
+      // Also do the general approach for any cookies we might have missed
+      document.cookie.split(";").forEach((cookie) => {
+        const [name] = cookie.trim().split("=")
+        if (
+          name &&
+          (name.includes("supabase") || name.includes("auth") || name.includes("session") || name.includes("sb-"))
+        ) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT;`
+        }
+      })
+    } catch (e) {
+      console.error("Failed to clear cookies:", e)
+    }
 
     // 5. Force reload the page to ensure all state is cleared
     window.location.href = "/"
