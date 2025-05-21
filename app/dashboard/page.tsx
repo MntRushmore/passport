@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, Award, Clock, ChevronRight } from "lucide-react"
 import { api, type Workshop, type Submission } from "@/lib/api"
+import { SignOutButton } from "@/components/sign-out-button"
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -90,9 +91,13 @@ export default function DashboardPage() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-serif font-bold text-navy-700">Dashboard</h1>
 
-          <Button asChild className="bg-navy-700 hover:bg-navy-800 text-cream font-serif">
-            <Link href="/passport">View Passport</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8 border-2 border-gold-500">
+              <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+              <AvatarFallback className="bg-navy-700 text-cream text-xl">{user.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <SignOutButton />
+          </div>
         </div>
 
         <div className="mb-6">

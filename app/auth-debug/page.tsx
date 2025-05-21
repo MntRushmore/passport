@@ -47,25 +47,30 @@ export default function AuthDebugPage() {
   // Function to collect client-side auth data
   const collectClientAuthData = () => {
     try {
+      // Make sure we're in the browser environment
+      if (typeof window === "undefined") return
+
       // Check localStorage
       const authItems = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (
-          key &&
-          (key.includes("supabase") || key.includes("auth") || key.includes("session") || key.includes("sb-"))
-        ) {
-          try {
-            const value = localStorage.getItem(key)
-            authItems.push({ key, value })
-          } catch (e) {
-            authItems.push({ key, value: "Error reading value" })
+      if (typeof localStorage !== "undefined") {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (
+            key &&
+            (key.includes("supabase") || key.includes("auth") || key.includes("session") || key.includes("sb-"))
+          ) {
+            try {
+              const value = localStorage.getItem(key)
+              authItems.push({ key, value })
+            } catch (e) {
+              authItems.push({ key, value: "Error reading value" })
+            }
           }
         }
       }
 
       // Check cookies
-      const cookies = document.cookie.split(";").map((cookie) => cookie.trim())
+      const cookies = typeof document !== "undefined" ? document.cookie.split(";").map((cookie) => cookie.trim()) : []
       const authCookies = cookies.filter((cookie) => {
         const name = cookie.split("=")[0]
         return (

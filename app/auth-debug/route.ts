@@ -46,7 +46,6 @@ export async function GET() {
       {
         error: "Server error",
         message: error instanceof Error ? error.message : "Unknown server error",
-        stack: process.env.NODE_ENV === "development" ? (error instanceof Error ? error.stack : undefined) : undefined,
       },
       { status: 500 },
     )

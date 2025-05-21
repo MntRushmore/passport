@@ -1,6 +1,7 @@
 import { PassportCover } from "@/components/passport-cover"
-import { AuthForm } from "@/components/auth-form"
+import { Button } from "@/components/ui/button"
 import { Shield, Users, Zap } from "lucide-react"
+import Link from "next/link"
 
 export default function Home() {
   return (
@@ -14,7 +15,11 @@ export default function Home() {
 
         <PassportCover />
 
-        <AuthForm />
+        <div className="flex justify-center">
+          <Button asChild className="bg-navy-700 hover:bg-navy-800 text-cream font-serif px-8 py-6 text-lg">
+            <Link href="/login">Get Started</Link>
+          </Button>
+        </div>
 
         <div className="border-2 border-gold-500 rounded-lg p-6 bg-cream">
           <h2 className="font-serif text-navy-700 text-xl mb-3 text-center">About the Challenge</h2>
