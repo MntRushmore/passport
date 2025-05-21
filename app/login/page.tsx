@@ -21,7 +21,7 @@ export default function LoginPage() {
       console.log("Redirecting to Slack...")
 
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: "slack_oidc"
+        provider: "slack_oidc",
         options: {
           redirectTo: "https://v0-hack-club-passport-app.vercel.app/auth/callback",
         },
