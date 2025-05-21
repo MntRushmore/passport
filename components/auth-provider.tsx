@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 import { useRouter } from "next/navigation"
 import { getSupabaseBrowserClient } from "@/lib/supabase"
 import type { User } from "@/types/supabase"
+import { performCompleteSignOut } from "@/lib/auth-handler"
 
 export interface AppUser {
   id: string
@@ -296,12 +297,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
 
     try {
-      const supabase = getSupabaseBrowserClient()
-      await supabase.auth.signOut()
+      await performCompleteSignOut()
       setUser(null)
-      router.push("/")
     } catch (error) {
       console.error("Sign out error:", error)
+      // Force a hard redirect to home as a fallback
+      window.location.href = "/"
     } finally {
       setIsLoading(false)
     }

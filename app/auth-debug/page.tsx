@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { getSupabaseBrowserClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { performDelayedRedirect } from "@/lib/auth-handler"
+import { performDelayedRedirect, performCompleteSignOut } from "@/lib/auth-handler"
+import { checkForLingeringAuth } from "@/lib/auth-utils"
 
 export default function AuthDebugPage() {
   const [sessionInfo, setSessionInfo] = useState<string>("Loading session info...")
@@ -79,11 +80,7 @@ export default function AuthDebugPage() {
 
   const handleSignOut = async () => {
     try {
-      const supabase = getSupabaseBrowserClient()
-      await supabase.auth.signOut()
-      localStorage.removeItem("auth_backup")
-      alert("Signed out successfully")
-      window.location.href = "/"
+      await performCompleteSignOut()
     } catch (error) {
       alert(`Error signing out: ${error instanceof Error ? error.message : String(error)}`)
     }
@@ -119,7 +116,10 @@ export default function AuthDebugPage() {
               <Button onClick={() => handleManualRedirect("/passport")}>Go to Passport</Button>
               <Button onClick={() => handleManualRedirect("/")}>Go to Home</Button>
               <Button onClick={handleSignOut} variant="destructive">
-                Sign Out
+                Complete Sign Out
+              </Button>
+              <Button onClick={checkForLingeringAuth} variant="outline">
+                Check for Lingering Auth
               </Button>
             </div>
           </div>

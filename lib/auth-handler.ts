@@ -1,4 +1,4 @@
-import { getSupabaseBrowserClient } from "@/lib/supabase"
+import { getSupabaseBrowserClient } from "@/lib/supabase" // Correct import path
 
 /**
  * A minimal auth handler that doesn't rely on Supabase's auth state change events
@@ -109,4 +109,59 @@ export function performDelayedRedirect(path: string, delay = 500): void {
   setTimeout(() => {
     window.location.href = path
   }, delay)
+}
+
+/**
+ * Perform a complete sign-out that clears all auth state
+ */
+export async function performCompleteSignOut(): Promise<void> {
+  try {
+    const supabase = getSupabaseBrowserClient()
+
+    // 1. Sign out with Supabase (clears their session)
+    await supabase.auth.signOut()
+
+    // 2. Clear our backup
+    try {
+      localStorage.removeItem("auth_backup")
+    } catch (e) {
+      console.error("Failed to clear auth backup:", e)
+    }
+
+    // 3. Clear all localStorage items that might be related to auth
+    try {
+      const keysToRemove = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (
+          key &&
+          (key.includes("supabase") || key.includes("auth") || key.includes("session") || key.includes("sb-"))
+        ) {
+          keysToRemove.push(key)
+        }
+      }
+
+      keysToRemove.forEach((key) => localStorage.removeItem(key))
+    } catch (e) {
+      console.error("Failed to clear localStorage:", e)
+    }
+
+    // 4. Clear cookies related to auth
+    document.cookie.split(";").forEach((cookie) => {
+      const [name] = cookie.trim().split("=")
+      if (
+        name &&
+        (name.includes("supabase") || name.includes("auth") || name.includes("session") || name.includes("sb-"))
+      ) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`
+      }
+    })
+
+    // 5. Force reload the page to ensure all state is cleared
+    window.location.href = "/"
+  } catch (error) {
+    console.error("Error during sign out:", error)
+    // Force reload anyway as a fallback
+    window.location.href = "/"
+  }
 }

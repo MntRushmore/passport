@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,7 +13,7 @@ import { Mail, Loader2, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getSupabaseBrowserClient } from "@/lib/supabase"
-import { handleSignIn, performDelayedRedirect } from "@/lib/auth-handler"
+import { handleSignIn, performDelayedRedirect, performCompleteSignOut } from "@/lib/auth-handler"
 
 export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -129,6 +128,12 @@ export function AuthForm() {
       console.error("Sign up error:", error)
       setFormError(error instanceof Error ? error.message : "Registration failed")
       setIsLoading(false)
+    }
+  }
+
+  const handleClearAllAuth = async () => {
+    if (confirm("This will clear all authentication data. Continue?")) {
+      await performCompleteSignOut()
     }
   }
 
@@ -289,6 +294,9 @@ export function AuthForm() {
             Privacy Policy
           </a>
         </p>
+        <Button onClick={handleClearAllAuth} variant="outline" size="sm" className="mt-4 text-xs">
+          Clear All Auth Data
+        </Button>
       </CardFooter>
     </Card>
   )
