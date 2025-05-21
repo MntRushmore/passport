@@ -12,17 +12,15 @@ const createBrowserClient = () => {
 
   return createClient<Database>(supabaseUrl, supabaseAnonKey)
 }
-
-// Singleton pattern to avoid multiple instances
 let browserClient: ReturnType<typeof createClient<Database>> | null = null
 
 export function getSupabase() {
   if (typeof window === "undefined") {
-    // Server-side: create a new client each time
+  
     return createBrowserClient()
   }
 
-  // Client-side: reuse the same client
+  
   if (!browserClient) {
     browserClient = createBrowserClient()
   }
@@ -30,7 +28,7 @@ export function getSupabase() {
   return browserClient
 }
 
-// Simple function to get the current user
+
 export async function getCurrentUser() {
   const supabase = getSupabase()
   const { data } = await supabase.auth.getUser()
