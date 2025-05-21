@@ -120,7 +120,20 @@ export async function performCompleteSignOut(): Promise<void> {
     await supabase.auth.signOut()
 
     // Clear any local storage or cookies
-    localStorage.removeItem("supabase.auth.token")
+    try {
+      localStorage.removeItem("supabase.auth.token")
+      localStorage.removeItem("auth_backup")
+
+      // Clear any other auth-related items
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && (key.includes("supabase") || key.includes("sb-") || key.includes("auth"))) {
+          localStorage.removeItem(key)
+        }
+      }
+    } catch (e) {
+      console.error("Error clearing localStorage:", e)
+    }
 
     // Force a hard navigation to clear any client-side state
     window.location.href = "/"

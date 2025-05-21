@@ -3,7 +3,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { getSupabase } from "@/lib/supabase-simple"
-import type { User } from "@supabase/supabase-js"
 import { performCompleteSignOut } from "@/lib/auth-handler"
 
 export interface AppUser {
@@ -13,7 +12,7 @@ export interface AppUser {
   avatar: string | null
   clubId: string | null
   clubName: string | null
-  role: User["role"]
+  role: string
   isNewUser?: boolean
 }
 

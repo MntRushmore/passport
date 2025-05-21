@@ -32,12 +32,13 @@ export async function middleware(req: NextRequest) {
   }
 
   // For protected paths, redirect to login if not authenticated
-  // Note: We can't use getSupabase() directly in middleware since it's server-side
-  // Instead, we'll check for the presence of auth cookies
-  const authCookie = req.cookies.get("sb-access-token") || req.cookies.get("supabase-auth-token")
+  // We'll check for auth cookies in a simple way
+  const hasCookies = req.cookies
+    .getAll()
+    .some((cookie) => cookie.name.includes("supabase") || cookie.name.includes("sb-") || cookie.name.includes("auth"))
 
-  if (!authCookie) {
-    console.log("Middleware: No auth cookie, redirecting to login")
+  if (!hasCookies) {
+    console.log("Middleware: No auth cookies, redirecting to login")
     const redirectUrl = new URL("/login", req.url)
     return NextResponse.redirect(redirectUrl)
   }
