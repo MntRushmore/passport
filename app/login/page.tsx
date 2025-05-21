@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
+import { createClientComponentClient } from "@supabase/ssr"
 import { Loader2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
@@ -16,7 +16,7 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const supabase = createPagesBrowserClient()
+      const supabase = createClientComponentClient()
 
       console.log("Redirecting to Slack...")
 
