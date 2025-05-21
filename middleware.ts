@@ -1,13 +1,10 @@
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
 
   // Update the CSP header to allow Vercel's feedback script
-
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel.live;
@@ -23,29 +20,27 @@ export async function middleware(req: NextRequest) {
 
   res.headers.set("Content-Security-Policy", cspHeader)
 
-  // Get the session
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // Add debug logging
-  console.log(`Middleware: Path=${req.nextUrl.pathname}, HasSession=${!!session}`)
-
   // Define public paths that don't require authentication
-  const publicPaths = ["/", "/auth/callback", "/auth/signin", "/auth/signup", "/test"]
+  const publicPaths = ["/", "/login", "/auth/callback", "/auth/signin", "/auth/signup", "/test"]
   const isPublicPath = publicPaths.some(
     (path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith("/auth/"),
   )
 
-  // If no session and trying to access a protected route, redirect to login
-  if (!session && !isPublicPath) {
-    console.log("Middleware: No session, redirecting to login")
-    const redirectUrl = new URL("/", req.url)
-    return NextResponse.redirect(redirectUrl)
+  // For public paths, we don't need to check authentication
+  if (isPublicPath) {
+    return res
   }
 
-  // We'll let the client-side code handle redirections from the home page
-  // to avoid conflicts with our direct redirection approach
+  // For protected paths, redirect to login if not authenticated
+  // Note: We can't use getSupabase() directly in middleware since it's server-side
+  // Instead, we'll check for the presence of auth cookies
+  const authCookie = req.cookies.get("sb-access-token") || req.cookies.get("supabase-auth-token")
+
+  if (!authCookie) {
+    console.log("Middleware: No auth cookie, redirecting to login")
+    const redirectUrl = new URL("/login", req.url)
+    return NextResponse.redirect(redirectUrl)
+  }
 
   return res
 }

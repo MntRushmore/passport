@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
+import { getSupabase } from "@/lib/supabase-simple"
 
 export async function POST(request: Request) {
   try {
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
 
     // Create server client
     const cookieStore = cookies()
-    const supabase = createServerClient()
+    const supabase = getSupabase()
 
     // Get session - try multiple methods
     let session

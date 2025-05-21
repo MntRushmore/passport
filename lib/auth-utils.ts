@@ -1,4 +1,4 @@
-import { getSupabaseBrowserClient } from "@/lib/supabase"
+import { getSupabase } from "@/lib/supabase-simple"
 
 /**
  * Check for any lingering auth state and report it
@@ -11,7 +11,7 @@ export async function checkForLingeringAuth(): Promise<void> {
 
   // 1. Check Supabase session
   try {
-    const supabase = getSupabaseBrowserClient()
+    const supabase = getSupabase()
     const { data, error } = await supabase.auth.getSession()
 
     if (error) {

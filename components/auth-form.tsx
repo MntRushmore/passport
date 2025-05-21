@@ -12,7 +12,7 @@ import { useAuth } from "@/components/auth-provider"
 import { Mail, Loader2, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { getSupabaseBrowserClient } from "@/lib/supabase"
+import { getSupabase } from "@/lib/supabase-simple"
 import { handleSignIn, performDelayedRedirect, performCompleteSignOut } from "@/lib/auth-handler"
 
 export function AuthForm() {
@@ -80,7 +80,7 @@ export function AuthForm() {
 
     try {
       // Direct Supabase sign-up
-      const supabase = getSupabaseBrowserClient()
+      const supabase = getSupabase()
 
       // Sign up with Supabase directly
       const { data, error } = await supabase.auth.signUp({

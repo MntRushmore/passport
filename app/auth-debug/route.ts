@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { createServerClient } from "@/lib/supabase"
+import { getSupabase } from "@/lib/supabase-simple"
 
 export async function GET() {
   try {
     const cookieStore = cookies()
-    const supabase = createServerClient()
+    const supabase = getSupabase()
 
     // Get session from server
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession()

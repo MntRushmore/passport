@@ -1,4 +1,4 @@
-import { getSupabaseBrowserClient, getSupabase } from "@/lib/supabase" // Correct import path
+import { getSupabase } from "@/lib/supabase-simple" // Correct import path
 
 /**
  * A minimal auth handler that doesn't rely on Supabase's auth state change events
@@ -12,7 +12,7 @@ export async function handleSignIn(
   error?: string
 }> {
   try {
-    const supabase = getSupabaseBrowserClient()
+    const supabase = getSupabase()
 
     // Sign in with Supabase directly
     const { data, error } = await supabase.auth.signInWithPassword({
