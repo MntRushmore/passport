@@ -4,15 +4,15 @@ import type { NextRequest } from "next/server"
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
 
-  // Update the CSP header to allow Vercel's feedback script
+  // Update the CSP header to allow Vercel's feedback script and Slack
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel.live;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data: https:;
+    img-src 'self' data: https: https://*.slack.com;
     font-src 'self';
-    connect-src 'self' https://*.supabase.co https://*.vercel.live;
-    frame-src 'self' https://*.supabase.co;
+    connect-src 'self' https://*.supabase.co https://*.vercel.live https://*.slack.com;
+    frame-src 'self' https://*.supabase.co https://*.slack.com;
     form-action 'self';
   `
     .replace(/\s{2,}/g, " ")
@@ -32,7 +32,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // For protected paths, redirect to login if not authenticated
-  // We'll check for auth cookies in a simple way
+  // Check for the presence of auth cookies
   const hasCookies = req.cookies
     .getAll()
     .some((cookie) => cookie.name.includes("supabase") || cookie.name.includes("sb-") || cookie.name.includes("auth"))

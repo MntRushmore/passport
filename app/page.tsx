@@ -17,7 +17,7 @@ export default function Home() {
 
         <div className="flex justify-center">
           <Button asChild className="bg-navy-700 hover:bg-navy-800 text-cream font-serif px-8 py-6 text-lg">
-            <Link href="/login">Get Started</Link>
+            <Link href="/login">Sign in with Slack</Link>
           </Button>
         </div>
 
@@ -39,7 +39,7 @@ export default function Home() {
           <div className="bg-white p-4 rounded-lg border border-gold-500 flex flex-col items-center text-center">
             <Shield className="h-8 w-8 text-navy-700 mb-2" />
             <h3 className="font-serif text-navy-700 text-sm mb-1">Secure Authentication</h3>
-            <p className="text-xs font-mono text-stone-600">Sign in securely with your account</p>
+            <p className="text-xs font-mono text-stone-600">Sign in securely with your Slack account</p>
           </div>
 
           <div className="bg-white p-4 rounded-lg border border-gold-500 flex flex-col items-center text-center">

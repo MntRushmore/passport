@@ -29,8 +29,7 @@ type AuthUser = {
 
 type AuthContextType = {
   user: AuthUser | null
-  signInWithEmail: (email: string, password: string) => Promise<void>
-  signUpWithEmail: (email: string, password: string, name: string) => Promise<void>
+  signInWithSlack: () => Promise<void>
   signOut: () => Promise<void>
   logout: () => Promise<void>
   isAuthenticated: boolean
@@ -41,8 +40,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  signInWithEmail: async () => {},
-  signUpWithEmail: async () => {},
+  signInWithSlack: async () => {},
   signOut: async () => {},
   logout: async () => {},
   isAuthenticated: false,
@@ -85,14 +83,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             club: profileData.club_name,
             clubId: profileData.club_id,
             role: profileData.role,
-            avatar: profileData.avatar_url,
+            avatar: profileData.avatar_url || authData.user.user_metadata?.avatar_url,
           })
         } else {
           // If no profile data, just use auth data
           setUser({
             id: authData.user.id,
-            name: authData.user.user_metadata?.name || "",
+            name: authData.user.user_metadata?.name || authData.user.user_metadata?.full_name || "",
             email: authData.user.email || "",
+            avatar: authData.user.user_metadata?.avatar_url,
           })
         }
       } catch (error) {
@@ -118,17 +117,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Sign in with email
-  const signInWithEmail = async (email: string, password: string) => {
+  // Sign in with Slack
+  const signInWithSlack = async () => {
     setIsLoading(true)
     setAuthError(null)
 
     try {
       const supabase = getSupabase()
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "slack",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       })
 
       if (error) {
@@ -137,91 +138,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error
       }
 
-      // If we have a user, check if they have a club and redirect accordingly
-      if (data.user) {
-        try {
-          const { data: userData, error: userError } = await supabase
-            .from("users")
-            .select("club_id")
-            .eq("auth_id", data.user.id)
-            .single()
-
-          if (!userError && userData) {
-            if (userData.club_id) {
-              hardRedirect("/dashboard")
-            } else {
-              hardRedirect("/onboarding")
-            }
-          } else {
-            // Default to onboarding if there's an error
-            hardRedirect("/onboarding")
-          }
-        } catch (err) {
-          console.error("Error checking user data after sign in:", err)
-          // Default to dashboard
-          hardRedirect("/dashboard")
-        }
-      }
+      // The user will be redirected to Slack for authentication
+      // After authentication, they will be redirected back to the callback URL
     } catch (error) {
-      console.error("Email sign in error:", error)
+      console.error("Slack sign in error:", error)
       setAuthError(error instanceof Error ? error.message : "Authentication failed")
       setIsLoading(false)
       throw error
-    }
-  }
-
-  // Sign up with email
-  const signUpWithEmail = async (email: string, password: string, name: string) => {
-    setIsLoading(true)
-    setAuthError(null)
-
-    try {
-      const supabase = getSupabase()
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-        },
-      })
-
-      if (error) {
-        setAuthError(error.message)
-        throw error
-      }
-
-      // If user was created, try to sign in immediately
-      if (data.user) {
-        try {
-          // Create user record in the database
-          const userData = {
-            auth_id: data.user.id,
-            name: name,
-            email: email,
-            role: "leader",
-          }
-
-          await supabase.from("users").insert(userData)
-
-          // Sign in
-          await supabase.auth.signInWithPassword({
-            email,
-            password,
-          })
-        } catch (signInError) {
-          console.error("Auto sign-in after signup failed:", signInError)
-          setAuthError("Account created but sign-in failed. Please try signing in manually.")
-        }
-      }
-    } catch (error) {
-      console.error("Email sign up error:", error)
-      setAuthError(error instanceof Error ? error.message : "Registration failed")
-      throw error
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -252,8 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Context value
   const value = {
     user,
-    signInWithEmail,
-    signUpWithEmail,
+    signInWithSlack,
     signOut,
     logout,
     isAuthenticated: !!user,

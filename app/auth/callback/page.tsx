@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { getSupabaseBrowserClient } from "@/lib/supabase"
+import { getSupabase } from "@/lib/supabase-simple"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -20,7 +20,7 @@ export default function AuthCallbackPage() {
     // Update the handleCallback function to ensure proper redirection
     const handleCallback = async () => {
       try {
-        const supabase = getSupabaseBrowserClient()
+        const supabase = getSupabase()
 
         // Check for error in URL parameters
         const errorParam = searchParams.get("error")
@@ -65,9 +65,27 @@ export default function AuthCallbackPage() {
             .single()
 
           if (userError) {
-            // If user not found, redirect to onboarding
+            // If user not found, create a new user record
             if (userError.code === "PGRST116") {
-              console.log("User not found in database, redirecting to onboarding")
+              console.log("User not found in database, creating new user record")
+
+              // Create user record from Slack data
+              const { user } = data.session
+              const userData = {
+                auth_id: user.id,
+                name:
+                  user.user_metadata.name ||
+                  user.user_metadata.full_name ||
+                  user.email?.split("@")[0] ||
+                  "Hack Club Member",
+                email: user.email || "",
+                avatar_url: user.user_metadata.avatar_url,
+                role: "leader",
+              }
+
+              await supabase.from("users").insert(userData)
+
+              console.log("User created, redirecting to onboarding")
               performDelayedRedirect("/onboarding")
               return
             }
