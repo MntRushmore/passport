@@ -1,6 +1,6 @@
 import type React from "react"
 import AuthCheck from "@/components/auth-check"
 
-export default function PassportLayout({ children }: { children: React.ReactNode }) {
+export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
   return <AuthCheck>{children}</AuthCheck>
 }

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { getSupabase, getSupabaseBrowserClient } from "@/lib/supabase-simple"
+import { getSupabase } from "@/lib/supabase-simple"
 import type { User } from "@supabase/supabase-js"
 import { performCompleteSignOut } from "@/lib/auth-handler"
 
@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthError(null)
 
     try {
-      const supabase = getSupabaseBrowserClient()
+      const supabase = getSupabase()
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -177,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthError(null)
 
     try {
-      const supabase = getSupabaseBrowserClient()
+      const supabase = getSupabase()
 
       const { data, error } = await supabase.auth.signUp({
         email,

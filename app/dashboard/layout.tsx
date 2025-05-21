@@ -1,10 +1,6 @@
-import type { ReactNode } from "react"
+import type React from "react"
 import AuthCheck from "@/components/auth-check"
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: ReactNode
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return <AuthCheck>{children}</AuthCheck>
 }

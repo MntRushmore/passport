@@ -6,9 +6,5 @@ export default function SubmitLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <AuthCheck>
-      <div className="min-h-screen bg-stone-100">{children}</div>
-    </AuthCheck>
-  )
+  return <AuthCheck>{children}</AuthCheck>
 }

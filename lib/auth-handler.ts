@@ -1,4 +1,4 @@
-import { getSupabaseBrowserClient } from "@/lib/supabase" // Correct import path
+import { getSupabaseBrowserClient, getSupabase } from "@/lib/supabase" // Correct import path
 
 /**
  * A minimal auth handler that doesn't rely on Supabase's auth state change events
@@ -116,84 +116,16 @@ export function performDelayedRedirect(path: string, delay = 500): void {
  */
 export async function performCompleteSignOut(): Promise<void> {
   try {
-    const supabase = getSupabaseBrowserClient()
-
-    // 1. Sign out with Supabase (clears their session)
+    const supabase = getSupabase()
     await supabase.auth.signOut()
 
-    // 2. Clear our backup
-    try {
-      localStorage.removeItem("auth_backup")
-    } catch (e) {
-      console.error("Failed to clear auth backup:", e)
-    }
+    // Clear any local storage or cookies
+    localStorage.removeItem("supabase.auth.token")
 
-    // 3. Clear all localStorage items that might be related to auth
-    try {
-      const keysToRemove = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (
-          key &&
-          (key.includes("supabase") || key.includes("auth") || key.includes("session") || key.includes("sb-"))
-        ) {
-          keysToRemove.push(key)
-        }
-      }
-
-      keysToRemove.forEach((key) => localStorage.removeItem(key))
-    } catch (e) {
-      console.error("Failed to clear localStorage:", e)
-    }
-
-    // 4. Clear cookies related to auth - update this section
-    try {
-      // Clear cookies by setting them to expire in the past
-      // This is more thorough than the previous approach
-      const cookiesToClear = [
-        "sb-access-token",
-        "sb-refresh-token",
-        "supabase-auth-token",
-        "sb-provider-token",
-        "sb-auth-token",
-        // Add any other potential cookie names
-        "sb-",
-        "supabase-",
-      ]
-
-      // Try multiple approaches to clear cookies
-      cookiesToClear.forEach((cookieName) => {
-        // Clear with path=/
-        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`
-
-        // Also try with domain specification if we're on a specific domain
-        const domain = window.location.hostname
-        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${domain};`
-
-        // Also try without path
-        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT;`
-      })
-
-      // Also do the general approach for any cookies we might have missed
-      document.cookie.split(";").forEach((cookie) => {
-        const [name] = cookie.trim().split("=")
-        if (
-          name &&
-          (name.includes("supabase") || name.includes("auth") || name.includes("session") || name.includes("sb-"))
-        ) {
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT;`
-        }
-      })
-    } catch (e) {
-      console.error("Failed to clear cookies:", e)
-    }
-
-    // 5. Force reload the page to ensure all state is cleared
+    // Force a hard navigation to clear any client-side state
     window.location.href = "/"
   } catch (error) {
     console.error("Error during sign out:", error)
-    // Force reload anyway as a fallback
-    window.location.href = "/"
+    throw error
   }
 }
