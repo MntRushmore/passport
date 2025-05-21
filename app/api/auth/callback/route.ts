@@ -20,13 +20,11 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`/login?error=missing_code`)
   }
 
-  const { error: exchangeError } =
-    await supabase.auth.exchangeCodeForSession({ code })
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession()
   if (exchangeError) {
     console.error("OAuth exchange failed:", exchangeError)
     return NextResponse.redirect(`/login?error=exchange_failed`)
   }
 
-  // at this point cookies are set for the session
   return NextResponse.redirect("/dashboard")
 }
