@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
 import { Loader2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
@@ -11,29 +10,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const supabase = createPagesBrowserClient()
-
-  const handleSlackLogin = async () => {
+  const handleSlackLogin = () => {
     setIsLoading(true)
-    setError("")
-
-    try {
-      console.log("Redirecting to Slack...")
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "slack_oidc",
-        options: {
-          redirectTo: "https://v0-hack-club-passport-app.vercel.app/api/auth/callback",
-        },
-      })
-
-      if (error) throw error
-
-    } catch (err) {
-      console.error("Login error:", err)
-      setError(err instanceof Error ? err.message : "Failed to sign in with Slack")
-      setIsLoading(false)
-    }
+    window.location.assign("/api/auth/signin")
   }
 
   return (
