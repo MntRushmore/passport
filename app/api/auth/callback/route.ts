@@ -16,15 +16,11 @@ export async function GET(request: Request) {
     )
   }
 
-  const code = reqUrl.searchParams.get("code")
-  if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=missing_code`)
-  }
-
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession()
-  if (exchangeError) {
-    console.error("OAuth exchange failed:", exchangeError)
-    return NextResponse.redirect(`${origin}/login?error=exchange_failed`)
+  // Handle OAuth callback and store session
+  const { data, error: sessionError } = await supabase.auth.getSessionFromUrl({ storeSession: true })
+  if (sessionError) {
+    console.error("OAuth callback failed:", sessionError)
+    return NextResponse.redirect(`${origin}/login?error=callback_failed`)
   }
 
   return NextResponse.redirect(`${origin}/dashboard`)
