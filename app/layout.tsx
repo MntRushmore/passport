@@ -1,29 +1,19 @@
-import type React from "react"
-import "./globals.css"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { AuthProvider } from "@/components/auth-provider"
-import { ErrorBoundary } from "@/components/error-boundary"
+import './globals.css'
+import { Inter } from 'next/font/google'
+import type { Metadata } from 'next'
 
-const inter = Inter({ subsets: ["latin"] }) // push
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "Hack Club Food Passport",
-  description: "Track your culinary coding adventures with Hack Club",
-    generator: 'hackclub.com',
+  title: 'Passport',
+  description: 'Hack Club Passport',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ErrorBoundary>
-          <AuthProvider>{children}</AuthProvider>
-        </ErrorBoundary>
+        {children}
       </body>
     </html>
   )
