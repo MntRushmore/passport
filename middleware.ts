@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export async function middleware(req: NextRequest) {
+  console.log('[middleware] incoming path:', req.nextUrl.pathname);
+  try {
   const res = NextResponse.next()
 
   const cspHeader = `
@@ -45,6 +47,7 @@ export async function middleware(req: NextRequest) {
   const hasCookies = req.cookies
     .getAll()
     .some((cookie) => cookie.name.includes("supabase") || cookie.name.includes("sb-") || cookie.name.includes("auth"))
+  console.log('[middleware] hasCookies:', hasCookies, 'cookie names:', req.cookies.getAll().map(c => c.name));
 
   if (!hasCookies) {
     console.log("Middleware: No auth cookies, redirecting to login")
@@ -53,6 +56,10 @@ export async function middleware(req: NextRequest) {
   }
 
   return res
+  } catch (err) {
+    console.error('[middleware] unexpected error on path', req.nextUrl.pathname, err);
+    return NextResponse.next();
+  }
 }
 
 export const config = {
