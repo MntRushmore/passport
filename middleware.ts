@@ -27,6 +27,7 @@ export async function middleware(req: NextRequest) {
       "/auth/callback",
       "/api/auth/callback",
       "/auth/signin",
+      "api/auth/signin",
       "/auth/signup",
       "/test",
     ]
