@@ -12,7 +12,6 @@ export async function GET(request: Request) {
     },
   })
   if (error || !data.url) {
-    // something went wrong; send back to login with a message
     const params = new URLSearchParams({
       error: error?.message ?? "signin_failed",
     }).toString()
