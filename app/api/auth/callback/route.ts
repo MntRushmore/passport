@@ -26,11 +26,15 @@ export async function GET(request: NextRequest) {
   }
 
   const code = reqUrl.searchParams.get("code");
+  console.log("[OAuth Callback] URL Search Params:", reqUrl.searchParams);
+  console.log("[OAuth Callback] Extracted code:", code);
 
   if (!code) {
+    console.error("[OAuth Callback] ❌ No code found in query params!");
     return NextResponse.redirect(`${origin}/login?error=missing_code`);
   }
 
+  console.log("[OAuth Callback] Sending to Supabase:", { code });
   console.log("[/api/auth/callback] Exchanging code for session with:", code);
   const { data, error: sessionError } =
     await supabase.auth.exchangeCodeForSession({ code });
