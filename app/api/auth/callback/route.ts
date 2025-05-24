@@ -1,27 +1,25 @@
-// app/api/auth/callback/route.ts
+// app/api/auth/signin/route.ts
+import { NextResponse } from "next/server"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
-import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
   // Initialize Supabase client with cookie-based handler
   const supabase = createRouteHandlerClient({ cookies })
 
-  const { searchParams } = new URL(request.url)
-  const code = searchParams.get("code")
-
-  if (!code) {
-    return NextResponse.json({ error: "Missing code" }, { status: 400 })
-  }
-
-  // Exchange the code for session
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+  // Start Slack OIDC login; this sets the PKCE code_verifier in a cookie
+  const { data, error } = await supabase.auth.signInWithOpenIDConnect({
+    provider: "slack_oidc",
+    options: {
+      redirectTo: `${new URL(request.url).origin}/api/auth/callback`,
+    },
+  })
 
   if (error) {
-    console.error("OAuth callback failed:", error)
+    console.error("OIDC sign-in error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Redirect to dashboard after successful login
-  return NextResponse.redirect(`${new URL(request.url).origin}/dashboard`)
+  // Redirect browser to Slack's login page (data.url)
+  return NextResponse.redirect(data.url)
 }
