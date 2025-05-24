@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] }) // push
 export const metadata: Metadata = {
   title: "Hack Club Food Passport",
   description: "Track your culinary coding adventures with Hack Club",
-    generator: 'v0.dev'
+    generator: 'hackclub.com',
 }
 
 export default function RootLayout({
