@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   console.log("[OAuth Callback] Sending to Supabase:", { code });
   console.log("[/api/auth/callback] Exchanging code for session with:", code);
   const { data, error: sessionError } =
-    await supabase.auth.exchangeCodeForSession({ code });
+    await supabase.auth.exchangeCodeForSession(code as string);
   console.log(
     "[/api/auth/callback] exchangeCodeForSession result →",
     { data, sessionError }
