@@ -6,7 +6,7 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 export async function GET(request: Request) {
   const supabase = createRouteHandlerClient({ cookies })
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'slack_oidc',
+    provider: 'slack',
     options: {
       redirectTo: `${new URL(request.url).origin}/api/auth/callback`,
     },
