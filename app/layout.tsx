@@ -5,7 +5,7 @@ import { Inter } from "next/font/google"
 import { AuthProvider } from "@/components/auth-provider"
 import { ErrorBoundary } from "@/components/error-boundary"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] }) // push
 
 export const metadata: Metadata = {
   title: "Hack Club Food Passport",
