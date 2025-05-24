@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { performCompleteSignOut } from "@/lib/auth-handler"
 import { checkForLingeringAuth } from "@/lib/auth-utils"
 import { Loader2 } from "lucide-react"
 
@@ -99,8 +98,10 @@ export default function AuthDebugPage() {
 
   const handleSignOut = async () => {
     try {
-      await performCompleteSignOut()
-      // The page will reload after sign out
+      // Just redirect for now
+      if (typeof window !== "undefined") {
+        window.location.href = "/"
+      }
     } catch (error) {
       alert(`Error signing out: ${error instanceof Error ? error.message : String(error)}`)
     }

@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
-import { getSupabase } from "@/lib/supabase-simple"
 
 export function SignOutButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -11,9 +10,6 @@ export function SignOutButton() {
   const handleSignOut = async () => {
     setIsLoading(true)
     try {
-      const supabase = getSupabase()
-      await supabase.auth.signOut()
-
       // Force a hard navigation to home
       if (typeof window !== "undefined") {
         window.location.href = "/"
