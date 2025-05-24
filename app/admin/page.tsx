@@ -384,7 +384,7 @@ export default function AdminPage() {
 
         <div className="text-center text-xs font-mono text-stone-500">
           <p className="flex items-center justify-center">
-            Connected to Supabase • Last synced: {new Date().toLocaleTimeString()}
+            Last synced: {new Date().toLocaleTimeString()}
             {isLoading && <RefreshCw className="ml-2 h-3 w-3 animate-spin" />}
           </p>
         </div>

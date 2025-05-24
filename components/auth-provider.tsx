@@ -1,37 +1,21 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { getSupabase } from "@/lib/supabase-simple"
-import { performCompleteSignOut } from "@/lib/auth-handler"
 
-export interface AppUser {
-  id: string
-  name: string
-  email: string
-  avatar: string | null
-  clubId: string | null
-  clubName: string | null
-  role: string
-  isNewUser?: boolean
-}
-
-// Define a simple user type for the context
 type AuthUser = {
   id: string
   name: string
   email: string
-  club?: string
-  clubId?: string
-  role?: string
   avatar?: string
+  role?: string
 }
 
 type AuthContextType = {
   user: AuthUser | null
-  signInWithSlack: () => Promise<void>
-  signOut: () => Promise<void>
-  logout: () => Promise<void>
+  signInWithSlack: () => void
+  signOut: () => void
+  logout: () => void
   isAuthenticated: boolean
   isLoading: boolean
   authError: string | null
@@ -40,9 +24,9 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  signInWithSlack: async () => {},
-  signOut: async () => {},
-  logout: async () => {},
+  signInWithSlack: () => {},
+  signOut: () => {},
+  logout: () => {},
   isAuthenticated: false,
   isLoading: true,
   authError: null,
@@ -55,138 +39,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
 
-  // Add this function to the AuthProvider component to handle hard redirects:
-  const hardRedirect = (path: string) => {
-    window.location.href = path
-  }
-
+  // Placeholder fetch logic
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const supabase = getSupabase()
-        const { data: authData } = await supabase.auth.getUser()
-
-        if (!authData.user) {
-          setUser(null)
-          setIsLoading(false)
-          return
-        }
-
-        // Get user profile data
-        const { data: profileData } = await supabase.from("users").select("*").eq("auth_id", authData.user.id).single()
-
-        if (profileData) {
-          setUser({
-            id: authData.user.id,
-            name: profileData.name || authData.user.user_metadata?.name || "",
-            email: authData.user.email || "",
-            club: profileData.club_name,
-            clubId: profileData.club_id,
-            role: profileData.role,
-            avatar: profileData.avatar_url || authData.user.user_metadata?.avatar_url,
-          })
-        } else {
-          // If no profile data, just use auth data
-          setUser({
-            id: authData.user.id,
-            name: authData.user.user_metadata?.name || authData.user.user_metadata?.full_name || "",
-            email: authData.user.email || "",
-            avatar: authData.user.user_metadata?.avatar_url,
-          })
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error)
+    setIsLoading(true)
+    try {
+      const session = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("session="))
+        ?.split("=")[1]
+      if (session) {
+        setUser({ id: "1", name: "Slack User", email: "user@example.com" }) // Replace with actual logic later
+      } else {
         setUser(null)
-      } finally {
-        setIsLoading(false)
       }
-    }
-
-    fetchUser()
-
-    // Set up auth state change listener
-    const supabase = getSupabase()
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      fetchUser()
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
-
-  // Sign in with Slack
-  const signInWithSlack = async () => {
-    setIsLoading(true)
-    setAuthError(null)
-
-    try {
-      const supabase = getSupabase()
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "slack",
-        options: {
-          redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
-        },
-      })
-
-      if (error) {
-        setAuthError(error.message)
-        setIsLoading(false)
-        throw error
-      }
-
-      // The user will be redirected to Slack for authentication
-      // After authentication, they will be redirected back to the callback URL
-    } catch (error) {
-      console.error("Slack sign in error:", error)
-      setAuthError(error instanceof Error ? error.message : "Authentication failed")
-      setIsLoading(false)
-      throw error
-    }
-  }
-
-  // Sign out
-  const signOut = async () => {
-    setIsLoading(true)
-
-    try {
-      await performCompleteSignOut()
+    } catch {
       setUser(null)
-    } catch (error) {
-      console.error("Sign out error:", error)
-      // Force a hard redirect to home as a fallback
-      if (typeof window !== "undefined") {
-        window.location.href = "/"
-      }
     } finally {
       setIsLoading(false)
     }
+  }, [])
+
+  const signInWithSlack = () => {
+    router.push("/api/auth/slack")
   }
 
-  // Alias for signOut for backward compatibility
+  const signOut = () => {
+    document.cookie = "session=; Max-Age=0; path=/"
+    router.push("/login")
+  }
+
   const logout = signOut
 
-  // Clear auth error
   const clearAuthError = () => {
     setAuthError(null)
   }
 
-  // Context value
-  const value = {
-    user,
-    signInWithSlack,
-    signOut,
-    logout,
-    isAuthenticated: !!user,
-    isLoading,
-    authError,
-    clearAuthError,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        signInWithSlack,
+        signOut,
+        logout,
+        isAuthenticated: !!user,
+        isLoading,
+        authError,
+        clearAuthError,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export const useAuth = () => useContext(AuthContext)
