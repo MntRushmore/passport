@@ -23,7 +23,10 @@ export async function GET(request: Request) {
   console.log("[/api/auth/callback] exchangeCodeForSession result →", { data, sessionError });
   if (sessionError) {
     console.error("OAuth callback failed:", sessionError)
-    return NextResponse.redirect(`${origin}/login?error=callback_failed`)
+    const errorMsg = encodeURIComponent(sessionError.message)
+    return NextResponse.redirect(
+      `${origin}/login?error=callback_failed&error_description=${errorMsg}`
+    )
   }
 
   return NextResponse.redirect(`${origin}/dashboard`)
