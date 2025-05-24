@@ -1,40 +1,45 @@
 // path: app/api/auth/callback/route.ts
-import { NextResponse, type NextRequest } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 
 export async function GET(request: NextRequest) {
   console.log("[/api/auth/callback] GET request received:", request.url);
-  const supabase = createRouteHandlerClient({ cookies })
-  const reqUrl = new URL(request.url)
-  const origin = reqUrl.origin
-  const error = reqUrl.searchParams.get("error")
-  const error_description = reqUrl.searchParams.get("error_description")
-  console.log("[/api/auth/callback] Parsed callback params → origin:", origin, "error:", error, "error_description:", error_description);
+  // Create Supabase client using cookie-based handler
+  const supabase = createRouteHandlerClient({ cookies });
+
+  const reqUrl = new URL(request.url);
+  const origin = reqUrl.origin;
+  const error = reqUrl.searchParams.get("error");
+  const error_description = reqUrl.searchParams.get("error_description");
+  console.log(
+    "[/api/auth/callback] Parsed callback params →",
+    { origin, error, error_description }
+  );
 
   if (error) {
     return NextResponse.redirect(
-      `${origin}/login?error=${error}&error_description=${error_description}`
-    )
+      `${origin}/login?error=${error}&error_description=${encodeURIComponent(
+        error_description ?? ""
+      )}`
+    );
   }
 
   console.log("[/api/auth/callback] Exchanging code for session...");
-  const code = reqUrl.searchParams.get("code");
-  if (!code) {
-    console.error("No code found in callback URL");
-    return NextResponse.redirect(
-      `${origin}/login?error=missing_code&error_description=No code found in callback URL`
-    );
-  }
-  const { data, error: sessionError } = await supabase.auth.exchangeCodeForSession(code)
-  console.log("[/api/auth/callback] exchangeCodeForSession result →", { data, sessionError });
+  const { data, error: sessionError } =
+    await supabase.auth.exchangeCodeForSession(request);
+  console.log(
+    "[/api/auth/callback] exchangeCodeForSession result →",
+    { data, sessionError }
+  );
+
   if (sessionError) {
-    console.error("OAuth callback failed:", sessionError)
-    const errorMsg = encodeURIComponent(sessionError.message)
+    console.error("OAuth callback failed:", sessionError);
+    const errorMsg = encodeURIComponent(sessionError.message);
     return NextResponse.redirect(
       `${origin}/login?error=callback_failed&error_description=${errorMsg}`
-    )
+    );
   }
 
-  return NextResponse.redirect(`${origin}/dashboard`)
+  return NextResponse.redirect(`${new URL(request.url).origin}/dashboard`);
 }
