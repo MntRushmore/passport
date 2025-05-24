@@ -25,9 +25,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  console.log("[/api/auth/callback] Exchanging code for session...");
+  const code = reqUrl.searchParams.get("code");
+
+  if (!code) {
+    return NextResponse.redirect(`${origin}/login?error=missing_code`);
+  }
+
+  console.log("[/api/auth/callback] Exchanging code for session with:", code);
   const { data, error: sessionError } =
-    await supabase.auth.exchangeCodeForSession(request);
+    await supabase.auth.exchangeCodeForSession({ code });
   console.log(
     "[/api/auth/callback] exchangeCodeForSession result →",
     { data, sessionError }
