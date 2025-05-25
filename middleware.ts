@@ -33,12 +33,8 @@ export async function middleware(req: NextRequest) {
       "/test",
     ]
     const isPublicPath =
-      publicPaths.some(
-        (path) =>
-          req.nextUrl.pathname === path ||
-          req.nextUrl.pathname.startsWith(path + "/")
-      ) ||
-      req.nextUrl.pathname.startsWith("/api/auth/")
+      publicPaths.includes(req.nextUrl.pathname) ||
+      publicPaths.some((path) => req.nextUrl.pathname.startsWith(path + "/"))
 
   
     if (isPublicPath) {
