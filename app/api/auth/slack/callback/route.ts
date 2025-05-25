@@ -3,13 +3,21 @@ import { cookies } from "next/headers"
 import jwt from "jsonwebtoken"
 import { PrismaClient } from "@prisma/client"
 
-const prisma = new PrismaClient()
+// Singleton pattern for PrismaClient
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
+
+const prisma = globalForPrisma.prisma ?? new PrismaClient()
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get("code")
   const state = searchParams.get("state")
-  const savedState = cookies().get("slack_oauth_state")?.value
+  const cookieStore = await cookies()
+  const savedState = cookieStore.get("slack_oauth_state")?.value
 
   console.log("OAuth callback hit")
   console.log("Code:", code)
@@ -86,14 +94,19 @@ export async function GET(request: Request) {
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "7d" })
 
-    const resFinal = NextResponse.redirect("/dashboard")
+    const resFinal = NextResponse.redirect(new URL("/dashboard", request.url))
+    
+    // Set the session cookie
     resFinal.cookies.set("session", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
     })
+
+    // Clear the OAuth state cookie
+    resFinal.cookies.delete("slack_oauth_state")
 
     return resFinal
   } catch (err) {
