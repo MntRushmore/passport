@@ -36,7 +36,7 @@ export async function middleware(req: NextRequest) {
       publicPaths.some(
         (path) =>
           req.nextUrl.pathname === path ||
-          req.nextUrl.pathname.startsWith(path.endsWith("/") ? path : path + "/")
+          req.nextUrl.pathname.startsWith(path + "/")
       ) ||
       req.nextUrl.pathname.startsWith("/api/auth/")
 
