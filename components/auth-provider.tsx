@@ -5,11 +5,10 @@ import { useRouter } from "next/navigation"
 
 type AuthUser = {
   id: string
-  slackId: string
   name: string
   email: string
   avatar?: string
-  createdAt?: string
+  role?: string
 }
 
 type AuthContextType = {
@@ -40,60 +39,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
 
-  // Check for existing session
+  // Placeholder fetch logic
   useEffect(() => {
-    const checkSession = async () => {
-      setIsLoading(true)
-      try {
-        const response = await fetch("/api/auth/me")
-        if (response.ok) {
-          const data = await response.json()
-          setUser(data.user)
-        } else {
-          setUser(null)
-        }
-      } catch (error) {
-        console.error("Session check failed:", error)
+    setIsLoading(true)
+    try {
+      const session = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("session="))
+        ?.split("=")[1]
+      if (session) {
+        setUser({ id: "1", name: "Slack User", email: "user@example.com" }) // Replace with actual logic later
+      } else {
         setUser(null)
-      } finally {
-        setIsLoading(false)
       }
+    } catch {
+      setUser(null)
+    } finally {
+      setIsLoading(false)
     }
-
-    checkSession()
   }, [])
 
   const signInWithSlack = () => {
     router.push("/api/auth/slack")
   }
 
-  const signOut = async () => {
-    try {
-      setIsLoading(true)
-      
-      // Call the logout API endpoint
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      })
-      
-      if (response.ok) {
-        setUser(null)
-        router.push("/login")
-      } else {
-        console.error("Logout failed:", response.statusText)
-        // Still clear local state even if API call fails
-        setUser(null)
-        router.push("/login")
-      }
-    } catch (error) {
-      console.error("Sign out error:", error)
-      // Clear local state even if there's an error
-      setUser(null)
-      router.push("/login")
-    } finally {
-      setIsLoading(false)
-    }
+  const signOut = () => {
+    document.cookie = "session=; Max-Age=0; path=/"
+    router.push("/login")
   }
 
   const logout = signOut
