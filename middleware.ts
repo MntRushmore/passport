@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import jwt from "jsonwebtoken"
 
 export async function middleware(req: NextRequest) {
   console.log('[middleware] incoming path:', req.nextUrl.pathname);
@@ -27,7 +28,7 @@ export async function middleware(req: NextRequest) {
       "/auth/callback",
       "/api/auth/callback",
       "/auth/signin",
-      "api/auth/signin",
+      "/api/auth/signin",
       "/auth/signup",
       "/test",
     ]
@@ -44,13 +45,20 @@ export async function middleware(req: NextRequest) {
       return res
     }
 
-    const hasCookies = req.cookies
-      .getAll()
-      .some((cookie) => cookie.name.includes("supabase") || cookie.name.includes("sb-") || cookie.name.includes("auth"))
-    console.log('[middleware] hasCookies:', hasCookies, 'cookie names:', req.cookies.getAll().map(c => c.name));
+    const sessionToken = req.cookies.get("session")?.value
+    console.log("[middleware] session cookie:", sessionToken)
 
-    if (!hasCookies) {
-      console.log("Middleware: No auth cookies, redirecting to login")
+    if (!sessionToken) {
+      console.log("[middleware] No session cookie found, redirecting to login")
+      const redirectUrl = new URL("/login", req.url)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    try {
+      const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET!)
+      console.log("[middleware] JWT decoded:", decoded)
+    } catch (err) {
+      console.error("[middleware] Invalid session token:", err)
       const redirectUrl = new URL("/login", req.url)
       return NextResponse.redirect(redirectUrl)
     }
