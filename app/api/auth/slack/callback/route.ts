@@ -97,13 +97,14 @@ export async function GET(request: Request) {
     const resFinal = NextResponse.redirect(new URL("/dashboard", request.url))
     
     // Set the session cookie
-    resFinal.cookies.set("session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    })
+  resFinal.cookies.set("session", token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+  sameSite: "lax",
+  maxAge: 60 * 60 * 24 * 7,
+  domain: "passport.hackclub.com",
+})
 
     // Clear the OAuth state cookie
     resFinal.cookies.delete("slack_oauth_state")
