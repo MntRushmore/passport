@@ -14,8 +14,8 @@ export async function middleware(req: NextRequest) {
       style-src 'self' 'unsafe-inline';
       img-src 'self' data: https: https://*.slack.com;
       font-src 'self';
-      connect-src 'self' https://*.supabase.co https://*.vercel.live https://*.slack.com;
-      frame-src 'self' https://*.supabase.co https://*.slack.com;
+      connect-src 'self' https://*.vercel.live https://*.slack.com;
+      frame-src 'self' https://*.slack.com;
       form-action 'self';
     `
       .replace(/\s{2,}/g, " ")

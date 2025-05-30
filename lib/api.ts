@@ -1,5 +1,5 @@
 import { getMockWorkshop } from "./mock-data"
-import type { UserRole, WorkshopDifficulty, SubmissionStatus } from "@/types/supabase"
+import type { UserRole, WorkshopDifficulty, SubmissionStatus } from "./types"
 
 export interface User {
   id: string
