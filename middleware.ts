@@ -45,6 +45,7 @@ export async function middleware(req: NextRequest) {
       return res
     }
 
+    console.log("[middleware] all cookies:", req.cookies.getAll())
     const sessionToken = req.cookies.get("session")?.value
     console.log("[middleware] session cookie:", sessionToken)
 
