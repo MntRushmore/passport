@@ -9,6 +9,8 @@ type AuthUser = {
   email: string
   avatar?: string
   role?: string
+  clubId?: string
+  isNewUser?: boolean
 }
 
 type AuthContextType = {
@@ -43,9 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fetchUser = async () => {
       setIsLoading(true)
       try {
+        console.log("📡 Calling /api/auth/user")
         const res = await fetch("/api/auth/user")
+        console.log("📥 Response:", res.status)
         if (!res.ok) throw new Error("Failed to fetch user")
         const data = await res.json()
+        console.log("👤 User data:", data)
 
         setUser(data)
 
