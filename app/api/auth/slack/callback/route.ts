@@ -88,18 +88,27 @@ export async function GET(request: Request) {
       },
     })
 
+    // Insert JWT_SECRET check and token creation before redirectPath
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined")
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    })
+
     const redirectPath = "/dashboard"
     const resFinal = NextResponse.redirect(new URL(redirectPath, request.url))
     
     // Set the session cookie
-  resFinal.cookies.set("session", token, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  path: "/",
-  sameSite: "lax",
-  maxAge: 60 * 60 * 24 * 7,
-  domain: "passport.hackclub.com",
-})
+    resFinal.cookies.set("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      domain: "passport.hackclub.com",
+    })
 
     // Clear the OAuth state cookie
     resFinal.cookies.delete("slack_oauth_state")
