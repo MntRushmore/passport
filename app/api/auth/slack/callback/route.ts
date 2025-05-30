@@ -88,7 +88,8 @@ export async function GET(request: Request) {
       },
     })
 
-    // Insert JWT_SECRET check and token creation before redirectPath
+    console.log("🔑 Prisma user upserted:", user)
+
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET is not defined")
     }
@@ -96,6 +97,8 @@ export async function GET(request: Request) {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     })
+
+    console.log("🔒 JWT token generated:", token)
 
     const redirectPath = "/dashboard"
     const resFinal = NextResponse.redirect(new URL(redirectPath, request.url))
@@ -109,9 +112,11 @@ export async function GET(request: Request) {
       domain: ".hackclub.com",
       maxAge: 60 * 60 * 24 * 7,
     })
+    console.log("🍪 Set session cookie for .hackclub.com")
 
     // Clear the OAuth state cookie
     resFinal.cookies.delete("slack_oauth_state")
+    console.log("🧹 Deleted slack_oauth_state cookie")
 
     return resFinal
   } catch (err) {

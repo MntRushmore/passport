@@ -5,9 +5,13 @@ const JWT_SECRET = process.env.JWT_SECRET!
 
 export async function GET(req: NextRequest) {
   console.log("🔥 /api/auth/user route hit")
+  const allCookies = req.cookies.getAll()
+  console.log("🍪 Incoming cookies:", allCookies)
   const token = req.cookies.get('session')?.value
+  console.log("🔎 Session token:", token)
 
   if (!token) {
+    console.warn("⚠️ No session token found in cookies")
     return NextResponse.json({ error: 'No token' }, { status: 401 })
   }
 
@@ -21,6 +25,7 @@ export async function GET(req: NextRequest) {
       clubId?: string
       isNewUser?: boolean
     }
+    console.log("✅ JWT verified, user:", user)
 
     return NextResponse.json({
       id: user.id,
@@ -32,6 +37,7 @@ export async function GET(req: NextRequest) {
       isNewUser: user.isNewUser ?? false,
     })
   } catch (err) {
+    console.error("❌ JWT verification failed:", err)
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
   }
 }
