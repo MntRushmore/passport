@@ -29,6 +29,8 @@ export async function middleware(req: NextRequest) {
       "/api/auth/callback",
       "/auth/signin",
       "/api/auth/signin",
+      "/api/auth/slack",
+      "/api/auth/slack/callback",
       "/auth/signup",
       "/test",
     ]
