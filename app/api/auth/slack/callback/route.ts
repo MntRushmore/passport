@@ -88,15 +88,7 @@ export async function GET(request: Request) {
       },
     })
 
-    const isNewUser = user.createdAt.getTime() === user.updatedAt.getTime()
-    const redirectPath = isNewUser || !user.clubId ? "/onboarding" : "/dashboard"
-
-    if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_SECRET is not defined")
-    }
-
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "7d" })
-
+    const redirectPath = "/dashboard"
     const resFinal = NextResponse.redirect(new URL(redirectPath, request.url))
     
     // Set the session cookie
