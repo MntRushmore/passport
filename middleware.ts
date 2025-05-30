@@ -32,7 +32,7 @@ export async function middleware(req: NextRequest) {
       "/api/auth/slack",
       "/api/auth/slack/callback",
       "/auth/signup",
-      "/onboarding",
+      "/dashboard",
       "/test",
     ]
     const isPublicPath =

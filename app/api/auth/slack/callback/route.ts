@@ -103,11 +103,10 @@ export async function GET(request: Request) {
     // Set the session cookie
     resFinal.cookies.set("session", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
+      sameSite: "none",
       path: "/",
-      sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
-      domain: "passport.hackclub.com",
     })
 
     // Clear the OAuth state cookie
