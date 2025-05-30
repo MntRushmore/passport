@@ -93,7 +93,7 @@ export async function GET(request: Request) {
       throw new Error("JWT_SECRET is not defined")
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     })
 
