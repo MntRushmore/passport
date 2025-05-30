@@ -104,8 +104,9 @@ export async function GET(request: Request) {
     resFinal.cookies.set("session", token, {
       httpOnly: true,
       secure: true,
-      sameSite: "none",
+      sameSite: "lax",
       path: "/",
+      domain: ".hackclub.com",
       maxAge: 60 * 60 * 24 * 7,
     })
 
