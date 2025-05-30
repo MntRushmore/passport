@@ -34,6 +34,7 @@ export async function middleware(req: NextRequest) {
       "/auth/signup",
       "/dashboard",
       "/test",
+      "/api/auth/user"
     ]
     const isPublicPath =
       publicPaths.includes(req.nextUrl.pathname) ||
