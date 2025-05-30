@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken"
 
 export async function middleware(req: NextRequest) {
   console.log('[middleware] incoming path:', req.nextUrl.pathname);
+  console.log("[middleware] cookies:", req.cookies.getAll())
   try {
     const res = NextResponse.next()
 
