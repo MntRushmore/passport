@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 const JWT_SECRET = process.env.JWT_SECRET!
 
 export async function GET(req: NextRequest) {
+  console.log("🔥 /api/auth/user route hit")
   const token = req.cookies.get('session')?.value
 
   if (!token) {
