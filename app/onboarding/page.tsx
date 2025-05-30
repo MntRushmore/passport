@@ -45,14 +45,19 @@ export default function OnboardingPage() {
   }, [step])
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        console.log("No user, redirecting to home")
-        router.push("/")
-      } else if (user.clubId && !user.isNewUser) {
-        console.log("User already has a club, redirecting to dashboard")
-        router.push("/dashboard")
-      }
+    if (authLoading) return
+
+  
+    if (user === null) {
+      console.log("No user, redirecting to home")
+      router.push("/")
+      return
+    }
+
+    // Redirect if user is already onboarded
+    if (user.clubId && !user.isNewUser) {
+      console.log("User already has a club, redirecting to dashboard")
+      router.push("/dashboard")
     }
   }, [user, authLoading, router])
 
