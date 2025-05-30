@@ -6,5 +6,5 @@ export default function SubmitLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <AuthCheck>{children}</AuthCheck>
+  return <>{children}</>
 }
