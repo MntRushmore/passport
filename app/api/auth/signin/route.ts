@@ -2,5 +2,5 @@
 import { NextResponse } from "next/server"
 
 export async function GET() {
-  return NextResponse.redirect("https://passport.hackclub.com/api/auth/slack")
+  return NextResponse.redirect("/api/auth/slack")
 }
