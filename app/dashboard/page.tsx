@@ -14,19 +14,18 @@ import { api, type Workshop, type Submission } from "@/lib/api"
 import { SignOutButton } from "@/components/sign-out-button"
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, authLoading } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [workshops, setWorkshops] = useState<Workshop[]>([])
   const [submissions, setSubmissions] = useState<Submission[]>([])
 
   useEffect(() => {
-    // Redirect to login if not authenticated
+    if (authLoading) return // wait for auth to finish
     if (!user) {
       router.push("/login")
       return
     }
-
     // Load data
     const loadData = async () => {
       setIsLoading(true)
@@ -46,12 +45,11 @@ export default function DashboardPage() {
         setIsLoading(false)
       }
     }
-
     loadData()
-  }, [user, router])
+  }, [user, authLoading, router])
 
-  if (!user) {
-    return null // Don't render anything while redirecting
+  if (authLoading || !user) {
+    return null
   }
 
   if (isLoading) {
