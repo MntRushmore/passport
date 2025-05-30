@@ -54,14 +54,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setUser(data)
 
-        // Redirect logic
-        if (data.isNewUser || !data.clubId) {
-          router.push("/onboarding")
-        } else {
+        // Only redirect to dashboard if not already there
+        if (window.location.pathname !== "/dashboard") {
           router.push("/dashboard")
         }
       } catch {
         setUser(null)
+        // Optionally redirect to login if not authenticated
+        if (window.location.pathname !== "/login") {
+          router.push("/login")
+        }
       } finally {
         setIsLoading(false)
       }
