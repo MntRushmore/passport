@@ -48,15 +48,10 @@ export async function middleware(req: NextRequest) {
     const sessionToken = req.cookies.get("session")?.value
     console.log("[middleware] session cookie:", sessionToken)
 
-    if (!sessionToken) {
-      if (req.nextUrl.pathname !== "/login") {
-        console.log("[middleware] No session cookie found, redirecting to login")
-        const redirectUrl = new URL("/login", req.url)
-        return NextResponse.redirect(redirectUrl)
-      } else {
-        console.log("[middleware] On login page, allowing through")
-        return res
-      }
+    if (!sessionToken && !isPublicPath) {
+      console.log("[middleware] No session cookie found, redirecting to login")
+      const redirectUrl = new URL("/login", req.url)
+      return NextResponse.redirect(redirectUrl)
     }
 
     try {
