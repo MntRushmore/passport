@@ -39,24 +39,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null)
   const router = useRouter()
 
-  // Placeholder fetch logic
   useEffect(() => {
-    setIsLoading(true)
-    try {
-      const session = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("session="))
-        ?.split("=")[1]
-      if (session) {
-        setUser({ id: "1", name: "Slack User", email: "user@example.com" }) // Replace with actual logic later
-      } else {
+    const fetchUser = async () => {
+      setIsLoading(true)
+      try {
+        const res = await fetch("/api/auth/user")
+        if (!res.ok) throw new Error("Failed to fetch user")
+        const data = await res.json()
+
+        setUser(data)
+
+        // Redirect logic
+        if (data.isNewUser || !data.clubId) {
+          router.push("/onboarding")
+        } else {
+          router.push("/dashboard")
+        }
+      } catch {
         setUser(null)
+      } finally {
+        setIsLoading(false)
       }
-    } catch {
-      setUser(null)
-    } finally {
-      setIsLoading(false)
     }
+
+    fetchUser()
   }, [])
 
   const signInWithSlack = () => {
