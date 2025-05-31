@@ -8,7 +8,7 @@ export default function Home() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-serif font-bold text-navy-800">Hack Club</h1>
-          <h2 className="text-2xl font-serif font-bold text-navy-700 mt-1">Food Passport Challenge</h2>
+          <h2 className="text-2xl font-serif font-bold text-navy-700 mt-1">Food Passport</h2>
           <p className="mt-2 text-stone-600 font-mono text-sm">Collect stamps from culinary coding adventures</p>
         </div>
 
