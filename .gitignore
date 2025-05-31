@@ -3,3 +3,20 @@ node_modules
 /lib/generated/prisma
 
 .env
+
+# Build output
+.next
+out
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+
+# Vercel local config
+.vercel
+
+# System files
+.DS_Store
+
+# Optional: local IDE settings
+.vscode
