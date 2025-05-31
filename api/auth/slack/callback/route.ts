@@ -1,5 +1,6 @@
 // app/api/auth/slack/callback/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
@@ -52,6 +53,14 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // Add session cookie logic here or redirect
-  return NextResponse.redirect("/dashboard"); // or set a cookie/session
+  const cookieStore = cookies();
+  cookieStore.set("session", user.id.toString(), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  });
+
+  return NextResponse.redirect("/dashboard");
 }

@@ -15,7 +15,12 @@ export default function Home() {
         <PassportCover />
 
         <div className="flex flex-col space-y-4">
-          <LoginButton />
+          <Link
+            href="/api/auth/slack"
+            className="bg-navy-700 text-white font-bold py-2 px-4 rounded text-center"
+          >
+            Sign in with Slack
+          </Link>
 
           <div className="text-center text-sm font-mono text-stone-500 mt-4">
             <p>
