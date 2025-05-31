@@ -36,7 +36,7 @@ export default function Home() {
           <h2 className="font-serif text-navy-700 text-xl mb-3 text-center">About the Challenge</h2>
           <p className="text-stone-700 font-mono text-sm leading-relaxed">
             Join Hack Club's global food-themed coding adventure! Complete workshops to earn stamps in your digital
-            passport. Create delicious projects with Glaze 🍩, Grub 🍟, Boba Drops 🧋, and Swirl 🍦.
+            passport. Create delicious projects with Glaze 🍩, Grub 🍟, Boba Drops 🧋, and Swirl 🍦...
           </p>
           <div className="flex justify-center mt-4 space-x-3">
             <span className="text-2xl">🍩</span>
