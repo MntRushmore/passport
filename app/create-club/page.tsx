@@ -13,7 +13,7 @@ export default function CreateClubPage() {
     e.preventDefault();
     setError("");
 
-    const res = await fetch("/create-club", {
+    const res = await fetch("/api/club", {
       method: "POST",
       body: JSON.stringify({ name, code }),
       headers: { "Content-Type": "application/json" },
