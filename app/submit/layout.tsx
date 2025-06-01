@@ -6,3 +6,5 @@ export default function SubmitLayout({
 }) {
   return <div className="min-h-screen bg-stone-100">{children}</div>
 }
+
+// This layout component wraps the submit page in a full-screen background
