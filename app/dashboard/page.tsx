@@ -24,14 +24,22 @@ export default function DashboardPage() {
   }, [user, router])
 
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
     async function fetchWorkshops() {
-      const res = await fetch("/api/workshops") // Make sure this route exists
-      const data = await res.json()
-      setWorkshops(data)
+      const res = await fetch("/api/workshops");
+      const data = await res.json();
+      setWorkshops(data);
     }
+
     if (user && user.clubCode) {
-      fetchWorkshops()
+      fetchWorkshops();
+      intervalId = setInterval(fetchWorkshops, 10000); // refetch every 10 seconds
     }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [user])
 
   if (!user) {

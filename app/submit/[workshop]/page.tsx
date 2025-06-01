@@ -4,7 +4,6 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -12,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, CheckCircle, Camera } from "lucide-react"
+import { ArrowLeft, CheckCircle } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 
@@ -49,9 +48,7 @@ export default function SubmitWorkshopPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
-  const [fileName, setFileName] = useState<string | null>(null)
   const [eventCode, setEventCode] = useState("")
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -81,12 +78,6 @@ export default function SubmitWorkshopPage() {
     )
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFileName(e.target.files[0].name)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -99,16 +90,6 @@ export default function SubmitWorkshopPage() {
       return;
     }
 
-    const file = fileInputRef.current?.files?.[0];
-    if (!file) {
-      toast({
-        title: "Photo Required",
-        description: "Please upload a photo of your workshop.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -116,7 +97,6 @@ export default function SubmitWorkshopPage() {
       formData.append("eventCode", eventCode);
       formData.append("clubName", user.club?.name || "");
       formData.append("leaderName", user.name);
-      formData.append("photo", file);
       formData.append("workshopSlug", workshopId);
 
       const response = await fetch("/api/workshop", {
@@ -231,39 +211,6 @@ export default function SubmitWorkshopPage() {
                   required
                 />
                 <p className="text-xs font-mono text-stone-500 mt-1">Enter the event code provided for this workshop</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="image" className="font-serif text-navy-700">
-                  Upload Workshop Photo
-                </Label>
-                <div className="border-2 border-dashed border-gold-500 rounded-md p-6 text-center bg-white">
-                  <Camera className="h-8 w-8 mx-auto text-navy-700 mb-2" />
-                  <p className="font-mono text-xs text-stone-600 mb-2">
-                    {fileName ? fileName : "Take a photo of your workshop and upload it here"}
-                  </p>
-                  <Input
-                    id="image"
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    required
-                    onChange={handleFileChange}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="border-gold-500 text-navy-700 font-mono text-xs"
-                    onClick={() => document.getElementById("image")?.click()}
-                  >
-                    {fileName ? "Change Photo" : "Upload Photo"}
-                  </Button>
-                </div>
-                <p className="text-xs font-mono text-stone-500 mt-1">
-                  Please include your club members in the photo if possible
-                </p>
               </div>
 
               <div className="space-y-2">
