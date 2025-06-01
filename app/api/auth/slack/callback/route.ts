@@ -25,7 +25,8 @@ export async function GET(req: NextRequest) {
   const data = await res.json();
 
   if (!data.ok) {
-    return NextResponse.json({ error: "Slack auth failed" }, { status: 400 });
+    console.error("Slack error:", data);
+    return NextResponse.json({ error: "Slack auth failed", details: data }, { status: 400 });
   }
 
   // Store or update user in DB
