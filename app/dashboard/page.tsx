@@ -60,11 +60,12 @@ export default function DashboardPage() {
   if (!user) {
     return null
   }
-  if (!user.club || !user.clubCode) {
-    return null
-  }
 
-  const showCreateClubPopup = !user.club
+  const showCreateClubPopup = !user.club || !user.clubCode;
+
+  if (showCreateClubPopup) {
+    // still render the page, just with the popup
+  }
 
   const completedCount = workshops.filter((w) => w.completed).length
   const progressPercentage = (completedCount / workshops.length) * 100
