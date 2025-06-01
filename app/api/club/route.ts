@@ -23,11 +23,7 @@ export async function POST(req: Request) {
       data: {
         name,
         clubCode: code,
-        user: {
-          connect: {
-            id: Number(userId),
-          },
-        },
+        userId: Number(userId),
       },
     });
 

@@ -20,7 +20,7 @@ const robotoMono = Roboto_Mono({
 export const metadata: Metadata = {
   title: "Hack Club Food Passport",
   description: "Track your culinary workshop adventures with Hack Club",
-    generator: 'v0.dev'
+    generator: 'hackclub'
 }
 
 export default function RootLayout({

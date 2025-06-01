@@ -1,27 +1,33 @@
-"use client"
-
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { useAuth } from "@/components/auth-provider"
-import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, Award, Clock, ChevronRight } from "lucide-react"
+import { cookies } from "next/headers";
+import prisma from "@/lib/prisma";
 
-export default function DashboardPage() {
-  const { user } = useAuth()
-  const router = useRouter()
+export default async function DashboardPage() {
+  const cookieStore = cookies();
+  const session = cookieStore.get("session");
+  const userId = session?.value;
+
+  if (!userId) {
+    return <p>Unauthorized</p>;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: Number(userId) },
+    include: { club: true },
+  });
+
+  if (!user) {
+    return <p>User not found</p>;
+  }
+
   const [workshops, setWorkshops] = useState([])
-
-  useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!user) {
-      router.push("/")
-    }
-  }, [user, router])
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
@@ -42,11 +48,7 @@ export default function DashboardPage() {
     };
   }, [user])
 
-  if (!user) {
-    return null
-  }
-
-  const showCreateClubPopup = !user.club || !user.clubCode;
+  const showCreateClubPopup = !user.club?.name || !user.clubCode;
 
   if (showCreateClubPopup) {
     // still render the page, just with the popup
@@ -98,7 +100,7 @@ export default function DashboardPage() {
                 </Avatar>
 
                 <div>
-                  <h2 className="font-serif text-navy-700 text-xl">{user.club}</h2>
+                  <h2 className="font-serif text-navy-700 text-xl">{user.club?.name}</h2>
                   <p className="font-mono text-sm text-stone-600">Leader: {user.name}</p>
                   <div className="mt-2">
                     {completedCount >= 3 ? (
