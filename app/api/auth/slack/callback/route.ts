@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Slack auth failed", details: data }, { status: 400 });
   }
 
-  // Store or update user in DB
+  // Store or update user in DB (neon)
   const slackUserId = data.authed_user.id;
   const slackAccessToken = data.authed_user.access_token;
 
