@@ -37,7 +37,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Slack auth failed", details: data }, { status: 400 });
   }
 
-  // Store or update user in DB (neon)
+  if (!data.authed_user || !data.authed_user.id || !data.authed_user.access_token) {
+    console.error("Missing authed_user in Slack response:", data);
+    return NextResponse.json({ error: "Slack response missing user info" }, { status: 400 });
+  }
+
   const slackUserId = data.authed_user.id;
   const slackAccessToken = data.authed_user.access_token;
 
@@ -47,6 +51,11 @@ export async function GET(req: NextRequest) {
   });
 
   const userInfo = await userInfoRes.json();
+
+  if (!userInfo.user || !userInfo.user.profile) {
+    console.error("Missing user or profile in userInfo:", userInfo);
+    return NextResponse.json({ error: "Slack user info incomplete", details: userInfo }, { status: 400 });
+  }
 
   const profile = userInfo.user.profile;
   const email = profile.email;
