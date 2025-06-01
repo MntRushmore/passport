@@ -1,6 +1,4 @@
-
-
-import { NextResponse } from "next/server";
+mport { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 
@@ -21,19 +19,26 @@ export async function POST(req: Request) {
   }
 
   try {
-    const user = await prisma.user.update({
-      where: { id: Number(userId) },
+    const newClub = await prisma.club.create({
       data: {
-        club: {
-          create: {
-            name,
-            clubCode: code,
+        name,
+        clubCode: code,
+        user: {
+          connect: {
+            id: Number(userId),
           },
         },
       },
     });
 
-    return NextResponse.json({ success: true });
+    await prisma.user.update({
+      where: { id: Number(userId) },
+      data: {
+        clubCode: newClub.clubCode,
+      },
+    });
+
+    return NextResponse.json({ success: true, club: newClub });
   } catch (error) {
     console.error("Error creating club:", error);
     return NextResponse.json({ error: "Failed to create club." }, { status: 500 });

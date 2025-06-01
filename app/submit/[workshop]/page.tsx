@@ -188,7 +188,7 @@ export default function SubmitWorkshopPage() {
                 </Label>
                 <Input
                   id="clubName"
-                  defaultValue={user.club}
+                  defaultValue={user.club?.name}
                   className="border-gold-500 bg-white font-mono text-sm"
                   required
                   disabled

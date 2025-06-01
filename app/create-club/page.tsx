@@ -21,6 +21,7 @@ export default function CreateClubPage() {
 
     if (res.ok) {
       router.push("/dashboard");
+      router.refresh();
     } else {
       const data = await res.json();
       setError(data.error || "Something went wrong.");

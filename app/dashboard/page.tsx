@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,44 +11,10 @@ import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, Award, Clock, ChevronRight } from "lucide-react"
 
-const workshops = [
-  {
-    id: "glaze",
-    title: "Glaze",
-    emoji: "🍩",
-    completed: true,
-    submissionDate: "April 15, 2023",
-    eventCode: "GLAZE-123",
-  },
-  {
-    id: "grub",
-    title: "Grub",
-    emoji: "🍟",
-    completed: false,
-    submissionDate: null,
-    eventCode: null,
-  },
-  {
-    id: "boba",
-    title: "Boba Drops",
-    emoji: "🧋",
-    completed: false,
-    submissionDate: null,
-    eventCode: null,
-  },
-  {
-    id: "swirl",
-    title: "Swirl",
-    emoji: "🍦",
-    completed: true,
-    submissionDate: "May 2, 2023",
-    eventCode: "SWIRL-456",
-  },
-]
-
 export default function DashboardPage() {
   const { user } = useAuth()
   const router = useRouter()
+  const [workshops, setWorkshops] = useState([])
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -56,6 +22,17 @@ export default function DashboardPage() {
       router.push("/")
     }
   }, [user, router])
+
+  useEffect(() => {
+    async function fetchWorkshops() {
+      const res = await fetch("/api/workshops") // Make sure this route exists
+      const data = await res.json()
+      setWorkshops(data)
+    }
+    if (user && user.clubCode) {
+      fetchWorkshops()
+    }
+  }, [user])
 
   if (!user) {
     return null
@@ -67,11 +44,11 @@ export default function DashboardPage() {
     // still render the page, just with the popup
   }
 
-  const completedCount = workshops.filter((w) => w.completed).length
-  const progressPercentage = (completedCount / workshops.length) * 100
-  const lastSubmission = workshops
+  const completedCount = (workshops || []).filter((w) => w.completed).length
+  const progressPercentage = (completedCount / (workshops.length || 1)) * 100
+  const lastSubmission = (workshops || [])
     .filter((w) => w.completed)
-    .sort((a, b) => new Date(b.submissionDate!).getTime() - new Date(a.submissionDate!).getTime())[0]
+    .sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime())[0]
 
   return (
     <>
@@ -157,7 +134,7 @@ export default function DashboardPage() {
 
               <div className="mt-4 pt-4 border-t border-gold-500">
                 <div className="grid grid-cols-4 gap-2">
-                  {workshops.map((workshop) => (
+                  {(workshops || []).map((workshop) => (
                     <div
                       key={workshop.id}
                       className={`flex items-center justify-center aspect-square rounded-full text-2xl
@@ -210,7 +187,7 @@ export default function DashboardPage() {
                 {completedCount < workshops.length ? (
                   <div>
                     <p className="text-sm text-navy-700 mb-3">Continue your journey:</p>
-                    {workshops
+                    {(workshops || [])
                       .filter((w) => !w.completed)
                       .slice(0, 2)
                       .map((workshop) => (
@@ -245,7 +222,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {workshops.map((workshop) => (
+              {(workshops || []).map((workshop) => (
                 <div
                   key={workshop.id}
                   className="border border-gold-500 rounded-md p-4 bg-white relative overflow-hidden"
