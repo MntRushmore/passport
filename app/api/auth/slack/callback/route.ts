@@ -45,21 +45,20 @@ export async function GET(req: NextRequest) {
   const slackUserId = data.authed_user.id;
   const slackAccessToken = data.authed_user.access_token;
 
-  const userInfoRes = await fetch("https://slack.com/api/users.info", {
+  const userInfoRes = await fetch("https://slack.com/api/users.identity", {
     headers: { Authorization: `Bearer ${slackAccessToken}` },
     method: "GET",
   });
 
   const userInfo = await userInfoRes.json();
 
-  if (!userInfo.user || !userInfo.user.profile) {
-    console.error("Missing user or profile in userInfo:", userInfo);
-    return NextResponse.json({ error: "Slack user info incomplete", details: userInfo }, { status: 400 });
+  if (!userInfo.user || !userInfo.user.email || !userInfo.user.name) {
+    console.error("Missing expected identity fields in userInfo:", userInfo);
+    return NextResponse.json({ error: "Slack identity info incomplete", details: userInfo }, { status: 400 });
   }
 
-  const profile = userInfo.user.profile;
-  const email = profile.email;
-  const name = profile.real_name;
+  const email = userInfo.user.email;
+  const name = userInfo.user.name;
 
   const user = await prisma.user.upsert({
     where: { slackId: slackUserId },
