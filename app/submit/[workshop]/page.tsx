@@ -1,8 +1,10 @@
+/* eslint-disable */
 "use client"
 
 import type React from "react"
 
 import { useState, useEffect } from "react"
+import { useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -49,6 +51,7 @@ export default function SubmitWorkshopPage() {
   const [isSuccess, setIsSuccess] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
   const [eventCode, setEventCode] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -85,57 +88,64 @@ export default function SubmitWorkshopPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    // Validate event code
     if (!eventCode.trim()) {
       toast({
         title: "Event Code Required",
         description: "Please enter the workshop event code provided by Hack Club.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    // Validate photo upload
-    if (!fileName) {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
       toast({
         title: "Photo Required",
         description: "Please upload a photo of your workshop.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
-    // Simulate API call to Airtable
     try {
-      // Simulate network request
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const formData = new FormData();
+      formData.append("eventCode", eventCode);
+      formData.append("clubName", user.club?.name || "");
+      formData.append("leaderName", user.name);
+      formData.append("photo", file);
+      formData.append("workshopSlug", workshopId);
 
-      // Show success state
-      setIsSuccess(true)
+      const response = await fetch("/api/workshop", {
+        method: "POST",
+        body: formData,
+      });
 
-      // Show toast notification
+      if (!response.ok) {
+        throw new Error("Failed to submit");
+      }
+
+      setIsSuccess(true);
       toast({
         title: "Workshop Submitted!",
         description: `Your ${workshop.title} workshop has been successfully submitted.`,
-      })
+      });
 
-      // Redirect after a delay
       setTimeout(() => {
-        router.push("/dashboard")
-      }, 2000)
+        router.push("/dashboard");
+      }, 2000);
     } catch (error) {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
       toast({
         title: "Submission Failed",
         description: "There was an error submitting your workshop. Please try again.",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   if (isSuccess) {
     return (
@@ -234,6 +244,7 @@ export default function SubmitWorkshopPage() {
                   </p>
                   <Input
                     id="image"
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     className="hidden"
