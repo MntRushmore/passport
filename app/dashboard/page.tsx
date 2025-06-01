@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react"
+"use client";
+// import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,26 +28,9 @@ export default async function DashboardPage() {
     return <p>User not found</p>;
   }
 
-  const [workshops, setWorkshops] = useState([])
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    async function fetchWorkshops() {
-      const res = await fetch("/api/workshops");
-      const data = await res.json();
-      setWorkshops(data);
-    }
-
-    if (user && user.clubCode) {
-      fetchWorkshops();
-      intervalId = setInterval(fetchWorkshops, 10000); // refetch every 10 seconds
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [user])
+  const workshops = await prisma.workshop.findMany({
+    where: { clubCode: user.clubCode },
+  });
 
   const showCreateClubPopup = !user.club?.name || !user.clubCode;
 
