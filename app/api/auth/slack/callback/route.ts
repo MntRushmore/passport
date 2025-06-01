@@ -81,5 +81,5 @@ export async function GET(req: NextRequest) {
 
   console.log("Slack user authenticated:", user);
 
-  return NextResponse.redirect("/dashboard");
+  return NextResponse.redirect("https://passport.hackclub.com/dashboard");
 }

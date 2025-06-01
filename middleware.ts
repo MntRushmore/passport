@@ -17,7 +17,7 @@ export function middleware(request: NextRequest) {
   const isPublic = publicPaths.some((path) => pathname.startsWith(path));
 
   if (isProtected && !session && !isPublic) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect("https://passport.hackclub.com/");
   }
 
   return NextResponse.next();
