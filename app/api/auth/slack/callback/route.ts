@@ -11,6 +11,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing code" }, { status: 400 });
   }
 
+  console.log("Starting Slack OAuth token exchange");
+  console.log("Client ID:", process.env.SLACK_CLIENT_ID);
+  console.log("Client Secret starts with:", process.env.SLACK_CLIENT_SECRET?.slice(0, 5));
+  console.log("Redirect URI:", process.env.SLACK_REDIRECT_URI);
+  console.log("Code from Slack:", code);
+
   const res = await fetch("https://slack.com/api/oauth.v2.access", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -23,6 +29,8 @@ export async function GET(req: NextRequest) {
   });
 
   const data = await res.json();
+
+  console.log("Slack OAuth response:", data);
 
   if (!data.ok) {
     console.error("Slack error:", data);
@@ -62,6 +70,8 @@ export async function GET(req: NextRequest) {
     path: "/",
     maxAge: 60 * 60 * 24 * 7, // 7 days
   });
+
+  console.log("Slack user authenticated:", user);
 
   return NextResponse.redirect("/dashboard");
 }
