@@ -31,7 +31,7 @@ const workshopData = {
     description: "Design a bubble tea customization app with drag-and-drop functionality.",
   },
   swirl: {
-    title: "Swirl",
+    title: "Toppings",
     emoji: "🍦",
     description: "Create an ice cream shop simulator with flavor mixing and topping options.",
   },
