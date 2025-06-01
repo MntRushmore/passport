@@ -60,6 +60,11 @@ export default function DashboardPage() {
   if (!user) {
     return null
   }
+  if (!user.club || !user.clubCode) {
+    return null
+  }
+
+  const showCreateClubPopup = !user.club
 
   const completedCount = workshops.filter((w) => w.completed).length
   const progressPercentage = (completedCount / workshops.length) * 100
@@ -68,7 +73,23 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(b.submissionDate!).getTime() - new Date(a.submissionDate!).getTime())[0]
 
   return (
-    <div className="min-h-screen bg-stone-100 flex flex-col items-center p-4 md:p-8">
+    <>
+      {showCreateClubPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
+          <div className="bg-cream border border-gold-500 rounded-lg shadow-lg max-w-md w-full p-6">
+            <h2 className="text-2xl font-serif text-navy-700 mb-4">Welcome, {user.name}!</h2>
+            <p className="text-sm text-stone-700 mb-6 font-mono">
+              You haven’t created a club yet. Let’s get started and launch your journey.
+            </p>
+            <div className="flex justify-end">
+              <Button asChild className="bg-navy-700 hover:bg-navy-800 text-cream font-serif">
+                <Link href="/create-club">Create a Club</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="min-h-screen bg-stone-100 flex flex-col items-center p-4 md:p-8">
       <div className="max-w-4xl w-full">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-serif font-bold text-navy-700">Dashboard</h1>
@@ -272,5 +293,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
