@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,105 +13,49 @@ import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-const submissions = [
-  {
-    id: "sub-001",
-    club: "Coding Chefs",
-    leader: "Rushil Chopra",
-    workshop: "Glaze",
-    workshopEmoji: "🍩",
-    eventCode: "GLAZE-123",
-    submissionType: "image",
-    submissionContent: "donut-app-screenshot.jpg",
-    date: "April 15, 2023",
-  },
-  {
-    id: "sub-002",
-    club: "Coding Chefs",
-    leader: "Alex Chen",
-    workshop: "Swirl",
-    workshopEmoji: "🍦",
-    eventCode: "SWIRL-456",
-    submissionType: "image",
-    submissionContent: "ice-cream-workshop.jpg",
-    date: "May 2, 2023",
-  },
-  {
-    id: "sub-003",
-    club: "Byte Bistro",
-    leader: "Jamie Wong",
-    workshop: "Glaze",
-    workshopEmoji: "🍩",
-    eventCode: "GLAZE-789",
-    submissionType: "image",
-    submissionContent: "glazed-donuts-project.png",
-    date: "March 28, 2023",
-  },
-  {
-    id: "sub-004",
-    club: "Byte Bistro",
-    leader: "Jamie Wong",
-    workshop: "Boba Drops",
-    workshopEmoji: "🧋",
-    eventCode: "BOBA-234",
-    submissionType: "image",
-    submissionContent: "boba-workshop-photo.jpg",
-    date: "April 10, 2023",
-  },
-  {
-    id: "sub-005",
-    club: "Code Cuisine",
-    leader: "Taylor Smith",
-    workshop: "Grub",
-    workshopEmoji: "🍟",
-    eventCode: "GRUB-567",
-    submissionType: "image",
-    submissionContent: "fast-food-workshop.jpg",
-    date: "May 5, 2023",
-  },
-]
 
-const clubs = [
-  {
-    name: "Coding Chefs",
-    leader: "Alex Chen",
-    completedWorkshops: 2,
-    members: 12,
-    location: "San Francisco, CA",
-    joinDate: "January 15, 2023",
-  },
-  {
-    name: "Byte Bistro",
-    leader: "Jamie Wong",
-    completedWorkshops: 2,
-    members: 8,
-    location: "New York, NY",
-    joinDate: "February 3, 2023",
-  },
-  {
-    name: "Code Cuisine",
-    leader: "Taylor Smith",
-    completedWorkshops: 1,
-    members: 15,
-    location: "Chicago, IL",
-    joinDate: "March 10, 2023",
-  },
-  {
-    name: "Dev Diner",
-    leader: "Jordan Lee",
-    completedWorkshops: 0,
-    members: 6,
-    location: "Austin, TX",
-    joinDate: "April 22, 2023",
-  },
-]
+
+
+// Placeholder for fetching real club data from the database
 
 export default function AdminPage() {
+  const [clubs, setClubs] = useState([]);
+  const [workshops, setWorkshops] = useState([]);
+
+  useEffect(() => {
+    async function fetchClubs() {
+      const res = await fetch("/api/clubs");
+      const data = await res.json();
+      setClubs(data);
+    }
+    async function fetchWorkshops() {
+      const res = await fetch("/api/workshops");
+      const data = await res.json();
+      setWorkshops(data);
+    }
+    fetchClubs();
+    fetchWorkshops();
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState<"submissions" | "clubs">("submissions")
   const [isLoading, setIsLoading] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
+
+  // Local state for new workshop form
+  const [newWorkshop, setNewWorkshop] = useState({ title: "", description: "", emoji: "" });
+
+  const [authPassed, setAuthPassed] = useState(false);
+
+  useEffect(() => {
+    const password = prompt("Enter admin password:");
+    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
+      setAuthPassed(true);
+    } else {
+      router.push("/");
+    }
+  }, []);
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -120,8 +64,8 @@ export default function AdminPage() {
     }
   }, [user, router])
 
-  if (!user) {
-    return null // Don't render anything while redirecting
+  if (!authPassed || !user) {
+    return null // Don't render anything while redirecting or waiting for password
   }
 
   const filteredSubmissions = submissions.filter(
@@ -133,19 +77,40 @@ export default function AdminPage() {
 
   const filteredClubs = clubs.filter(
     (club) =>
-      club.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      club.leader.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      club.location.toLowerCase().includes(searchTerm.toLowerCase()),
+      club.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      club.leader?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      club.location?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const refreshData = () => {
-    setIsLoading(true)
-    // Simulate API call to Airtable
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
-  }
+  // Refetch both clubs and workshops
+  const refreshData = async () => {
+    setIsLoading(true);
+    const [clubsRes, workshopsRes] = await Promise.all([
+      fetch("/api/clubs"),
+      fetch("/api/workshops"),
+    ]);
+    const [clubsData, workshopsData] = await Promise.all([
+      clubsRes.json(),
+      workshopsRes.json(),
+    ]);
+    setClubs(clubsData);
+    setWorkshops(workshopsData);
+    setIsLoading(false);
+  };
 
+  // Handler for new workshop form submission
+  const handleAddWorkshop = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await fetch("/api/workshops", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...newWorkshop, clubCode: "global" }),
+    });
+    setNewWorkshop({ title: "", description: "", emoji: "" });
+    refreshData();
+  };
+
+  if (!authPassed) return null;
   return (
     <div className="min-h-screen bg-stone-100 flex flex-col items-center p-4 md:p-8">
       <div className="max-w-6xl w-full">
@@ -363,6 +328,45 @@ export default function AdminPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Add New Workshop Section */}
+        <div className="mt-6">
+          <h2 className="text-xl font-serif font-bold text-navy-700 mb-2">Add New Workshop</h2>
+          <form
+            onSubmit={handleAddWorkshop}
+            className="bg-white border border-gold-500 p-4 rounded-md flex flex-col gap-4"
+          >
+            <Input
+              placeholder="Title"
+              value={newWorkshop.title}
+              onChange={(e) => setNewWorkshop({ ...newWorkshop, title: e.target.value })}
+            />
+            <Input
+              placeholder="Description"
+              value={newWorkshop.description}
+              onChange={(e) => setNewWorkshop({ ...newWorkshop, description: e.target.value })}
+            />
+            <Input
+              placeholder="Emoji"
+              value={newWorkshop.emoji}
+              onChange={(e) => setNewWorkshop({ ...newWorkshop, emoji: e.target.value })}
+            />
+            <Button className="bg-navy-700 text-cream font-mono" type="submit">
+              Add Workshop
+            </Button>
+          </form>
+          {/* List all workshops */}
+          <div className="mt-6">
+            <h2 className="text-lg font-serif font-bold text-navy-700 mb-2">All Workshops</h2>
+            <ul className="bg-white border border-gold-500 p-4 rounded-md text-sm font-mono">
+              {workshops.map((w) => (
+                <li key={w.id}>
+                  {w.emoji} {w.title} – {w.description}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
 
         <div className="text-center text-xs font-mono text-stone-500">
           <p className="flex items-center justify-center">
