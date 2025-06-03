@@ -13,15 +13,37 @@ import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
+type Submission = {
+  id: string;
+  workshop: string;
+  workshopEmoji: string;
+  club: string;
+  leader: string;
+  eventCode: string;
+  submissionType: string;
+  submissionContent: string;
+  date: string;
+};
 
+type Club = {
+  name: string;
+  leader: string;
+  members: number;
+  completedWorkshops: number;
+  location: string;
+};
 
-
-
-// Placeholder for fetching real club data from the database
+type Workshop = {
+  id: string;
+  title: string;
+  description: string;
+  emoji: string;
+};
 
 export default function AdminPage() {
-  const [clubs, setClubs] = useState([]);
-  const [workshops, setWorkshops] = useState([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
 
   useEffect(() => {
     async function fetchClubs() {
@@ -34,8 +56,14 @@ export default function AdminPage() {
       const data = await res.json();
       setWorkshops(data);
     }
+    async function fetchSubmissions() {
+      const res = await fetch("/api/submissions");
+      const data = await res.json();
+      setSubmissions(data);
+    }
     fetchClubs();
     fetchWorkshops();
+    fetchSubmissions();
   }, []);
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -43,6 +71,10 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { user, isLoading: isAuthLoading } = useAuth()
   const router = useRouter()
+  // Debug logs
+  console.log("authPassed:", authPassed);
+  console.log("user:", user);
+  console.log("localStorage.adminAuth:", typeof window !== "undefined" ? localStorage.getItem("adminAuth") : "N/A");
 
   // Local state for new workshop form
   const [newWorkshop, setNewWorkshop] = useState({ title: "", description: "", emoji: "" });
@@ -79,9 +111,9 @@ useEffect(() => {
   }
 }, [user, isAuthLoading, router]);
 
-  if (!authPassed || !user) {
-    return null
-  }
+  // if (!authPassed || !user) {
+  //   return null
+  // }
 
   const filteredSubmissions = submissions.filter(
     (sub) =>
@@ -383,12 +415,6 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="text-center text-xs font-mono text-stone-500">
-          <p className="flex items-center justify-center">
-            Connected to Airtable • Last synced: {new Date().toLocaleTimeString()}
-            {isLoading && <RefreshCw className="ml-2 h-3 w-3 animate-spin" />}
-          </p>
-        </div>
       </div>
     </div>
   )
