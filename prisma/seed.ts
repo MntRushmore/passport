@@ -6,6 +6,7 @@ await prisma.workshop.createMany({
       emoji: "🍩",
       description: "Create a delicious donut-themed web app...",
       completed: false,
+      submissionDate: null,
       clubCode: "global",
     },
     {
@@ -14,6 +15,7 @@ await prisma.workshop.createMany({
       emoji: "🍟",
       description: "Build a fast food ordering system...",
       completed: false,
+      submissionDate: null,
       clubCode: "global",
     },
     // Add others...
