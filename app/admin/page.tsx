@@ -13,7 +13,6 @@ import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
 
 
@@ -51,15 +50,25 @@ export default function AdminPage() {
   const [authPassed, setAuthPassed] = useState(false);
 
 useEffect(() => {
-  const password = prompt("Enter admin password:");
-  console.log("Entered password:", password);
-  console.log("Expected ADMIN_PASSWORD:", ADMIN_PASSWORD);
-  if (password === ADMIN_PASSWORD) {
+  const saved = localStorage.getItem("adminAuth");
+  if (saved === "yes") {
     setAuthPassed(true);
-  } else {
-    console.log("Redirecting to / because password did not match.");
-    router.push("/");
+    return;
   }
+
+  const password = prompt("Enter admin password:");
+  fetch("/api/admin-auth", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  }).then((res) => {
+    if (res.ok) {
+      localStorage.setItem("adminAuth", "yes");
+      setAuthPassed(true);
+    } else {
+      router.push("/");
+    }
+  });
 }, []);
 
 useEffect(() => {
