@@ -1,3 +1,4 @@
+import type { Workshop } from "@prisma/client";
 // import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -23,11 +24,11 @@ export default async function DashboardPage() {
     include: { club: true },
   });
 
-  if (!user) {
+  if (!user || !user.clubCode) {
     return <p>User not found</p>;
   }
 
-  const workshops = await prisma.workshop.findMany({
+  const workshops: Workshop[] = await prisma.workshop.findMany({
     where: { clubCode: user.clubCode },
   });
 
