@@ -25,13 +25,15 @@ export default async function DashboardPage() {
     include: { club: true },
   });
 
-  if (!user || !user.clubCode) {
+  if (!user || !user.club?.clubCode) {
     console.error("User not found in DB or missing clubCode:", user);
     return <p>User not found</p>;
   }
 
+  const clubCode = user.club.clubCode;
+
   const workshops: Workshop[] = await prisma.workshop.findMany({
-    where: { clubCode: user.clubCode },
+    where: { clubCode },
   });
 
   const showCreateClubPopup = !user.club?.name || !user.clubCode;
