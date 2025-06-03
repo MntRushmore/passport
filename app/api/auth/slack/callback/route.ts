@@ -1,6 +1,5 @@
 // app/api/auth/slack/callback/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
@@ -70,16 +69,13 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  const cookieStore = cookies();
-  cookieStore.set("session", user.id.toString(), {
+  const response = NextResponse.redirect("https://passport.hackclub.com/dashboard");
+  response.cookies.set("session", user.id.toString(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days sure
+    maxAge: 60 * 60 * 24 * 7, // 7 days
   });
-
-  console.log("Slack user authenticated:", user);
-
-  return NextResponse.redirect("https://passport.hackclub.com/dashboard");
+  return response;
 }

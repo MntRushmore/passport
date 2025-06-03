@@ -13,18 +13,20 @@ import prisma from "@/lib/prisma";
 export default async function DashboardPage() {
   const cookieStore = cookies();
   const session = cookieStore.get("session");
-  const userId = session?.value;
+  const userId = Number(session?.value);
 
-  if (!userId) {
+  if (!userId || isNaN(userId)) {
+    console.error("Invalid userId in session:", session?.value);
     return <p>Unauthorized</p>;
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: Number(userId) },
+    where: { id: userId },
     include: { club: true },
   });
 
   if (!user || !user.clubCode) {
+    console.error("User not found in DB or missing clubCode:", user);
     return <p>User not found</p>;
   }
 
