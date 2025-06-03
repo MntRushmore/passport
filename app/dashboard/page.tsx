@@ -36,7 +36,7 @@ export default async function DashboardPage() {
     where: { clubCode },
   });
 
-  const showCreateClubPopup = !user.club?.name || !user.clubCode;
+  const showCreateClubPopup = !user.club?.name || !user.club?.clubCode;
 
   if (showCreateClubPopup) {
     // still render the page, just with the popup
