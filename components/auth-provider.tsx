@@ -15,6 +15,7 @@ type AuthContextType = {
   login: (user: User) => void
   logout: () => void
   isAuthenticated: boolean
+  isLoading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     isAuthenticated: !!user,
+    isLoading,
   }
 
   if (isLoading) {

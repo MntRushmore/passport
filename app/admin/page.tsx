@@ -42,7 +42,7 @@ export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState<"submissions" | "clubs">("submissions")
   const [isLoading, setIsLoading] = useState(false)
-  const { user } = useAuth()
+  const { user, isLoading: isAuthLoading } = useAuth()
   const router = useRouter()
 
   // Local state for new workshop form
@@ -50,24 +50,28 @@ export default function AdminPage() {
 
   const [authPassed, setAuthPassed] = useState(false);
 
-  useEffect(() => {
-    const password = prompt("Enter admin password:");
-    if (password === ADMIN_PASSWORD) {
-      setAuthPassed(true);
-    } else {
-      router.push("/");
-    }
-  }, []);
+useEffect(() => {
+  const password = prompt("Enter admin password:");
+  console.log("Entered password:", password);
+  console.log("Expected ADMIN_PASSWORD:", ADMIN_PASSWORD);
+  if (password === ADMIN_PASSWORD) {
+    setAuthPassed(true);
+  } else {
+    console.log("Redirecting to / because password did not match.");
+    router.push("/");
+  }
+}, []);
 
-  useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!user) {
-      router.push("/")
-    }
-  }, [user, router])
+useEffect(() => {
+  if (isAuthLoading) return;
+  console.log("User from useAuth():", user);
+  if (!user) {
+    router.push("/");
+  }
+}, [user, isAuthLoading, router]);
 
   if (!authPassed || !user) {
-    return null // Don't render anything while redirecting or waiting for password
+    return null
   }
 
   const filteredSubmissions = submissions.filter(
