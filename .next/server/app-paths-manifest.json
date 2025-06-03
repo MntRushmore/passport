@@ -1,5 +1,5 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
-  "/passport/page": "app/passport/page.js"
+  "/api/auth/slack/route": "app/api/auth/slack/route.js",
+  "/page": "app/page.js"
 }

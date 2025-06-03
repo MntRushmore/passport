@@ -11,10 +11,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/passport/page": [
+    "/api/auth/slack/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/passport/page.js"
+      "static/chunks/app/api/auth/slack/route.js"
     ],
     "/_not-found/page": [
       "static/chunks/webpack.js",
