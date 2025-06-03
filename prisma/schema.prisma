@@ -27,7 +27,6 @@ model Club {
   userId Int  @unique
   user   User @relation("UserClub", fields: [userId], references: [id])
 
-  workshops Workshop[] @relation("ClubWorkshops")
 }
 
 model Workshop {
@@ -37,6 +36,5 @@ model Workshop {
   completed      Boolean   @default(false)
   submissionDate DateTime?
   clubCode       String
-
-  club Club @relation("ClubWorkshops", fields: [clubCode], references: [clubCode])
+  emoji          String?
 }
