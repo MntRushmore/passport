@@ -71,6 +71,7 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { user, isLoading: isAuthLoading } = useAuth()
   const router = useRouter()
+  const [authPassed, setAuthPassed] = useState(false);
   // Debug logs
   console.log("authPassed:", authPassed);
   console.log("user:", user);
@@ -78,8 +79,6 @@ export default function AdminPage() {
 
   // Local state for new workshop form
   const [newWorkshop, setNewWorkshop] = useState({ title: "", description: "", emoji: "" });
-
-  const [authPassed, setAuthPassed] = useState(false);
 
 useEffect(() => {
   const saved = localStorage.getItem("adminAuth");
