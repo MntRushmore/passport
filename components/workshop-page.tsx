@@ -12,6 +12,7 @@ interface Workshop {
   difficulty?: "beginner" | "intermediate" | "advanced"
   duration?: string
   skills?: string[]
+  clubCode: string // 👈 add this line
 }
 
 interface WorkshopPageProps {
@@ -86,7 +87,7 @@ export function WorkshopPage({ workshop }: WorkshopPageProps) {
         </div>
 
         {/* Submission section */}
-        {workshop.completed && (
+        {workshop.completed && (workshop.clubCode === process.env.NEXT_PUBLIC_CLUB_CODE) && (
           <div className="mb-6">
             <h3 className="font-serif text-navy-700 text-lg mb-2">Submission</h3>
             <div className="bg-white rounded p-4 border border-gold-500">

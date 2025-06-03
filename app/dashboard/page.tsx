@@ -33,7 +33,12 @@ export default async function DashboardPage() {
   const clubCode = user.club.clubCode;
 
   const workshops: Workshop[] = await prisma.workshop.findMany({
-    where: { clubCode: "global" },
+    where: {
+      OR: [
+        { clubCode: "global" },
+        { clubCode }
+      ]
+    }
   });
 
   const showCreateClubPopup = !user.club?.name || !user.club?.clubCode;
