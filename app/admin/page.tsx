@@ -13,6 +13,8 @@ import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+
 
 
 
@@ -50,7 +52,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     const password = prompt("Enter admin password:");
-    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
+    if (password === ADMIN_PASSWORD) {
       setAuthPassed(true);
     } else {
       router.push("/");
