@@ -16,22 +16,22 @@ import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 
 const workshopData = {
-  glaze: {
+  1: {
     title: "Glaze",
     emoji: "🍩",
     description: "Create a delicious donut-themed web app with interactive glazing features.",
   },
-  grub: {
+  2: {
     title: "Grub",
     emoji: "🍟",
     description: "Build a fast food ordering system with real-time updates and notifications.",
   },
-  boba: {
+  3: {
     title: "Boba Drops",
     emoji: "🧋",
     description: "Design a bubble tea customization app with drag-and-drop functionality.",
   },
-  swirl: {
+  4: {
     title: "Toppings",
     emoji: "🍦",
     description: "Create an ice cream shop simulator with flavor mixing and topping options.",
@@ -43,7 +43,8 @@ export default function SubmitWorkshopPage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
-  const workshopId = params.workshop as string
+  const workshopParam = params.workshop as string
+  const workshopId = parseInt(workshopParam) || 1
   const workshop = workshopData[workshopId as keyof typeof workshopData]
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -102,7 +103,7 @@ export default function SubmitWorkshopPage() {
       formData.append("eventCode", eventCode);
       formData.append("clubName", user?.club?.name || "");
       formData.append("leaderName", user?.name || "");
-      formData.append("workshopSlug", workshopId);
+      formData.append("workshopSlug", workshopId.toString());
 
       const response = await fetch("/api/workshop", {
         method: "POST",

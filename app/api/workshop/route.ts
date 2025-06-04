@@ -18,17 +18,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  // Create a workshop submission record
-  const workshop = await prisma.workshop.create({
-    data: {
-      title: workshopSlug,
-      description: `Workshop submission for ${workshopSlug}`,
-      emoji: "🎯",
-      clubCode: eventCode,
-      completed: true,
-      submissionDate: new Date(),
-    },
-  });
+  try {
+    // Convert workshopSlug to workshop ID
+    const workshopId = parseInt(workshopSlug);
+    
+    // Find the existing workshop
+    const existingWorkshop = await prisma.workshop.findUnique({
+      where: { id: workshopId }
+    });
 
-  return NextResponse.json(workshop, { status: 201 });
+    if (!existingWorkshop) {
+      return NextResponse.json({ error: 'Workshop not found' }, { status: 404 });
+    }
+
+    // Update the workshop to mark it as completed
+    const workshop = await prisma.workshop.update({
+      where: { id: workshopId },
+      data: {
+        completed: true,
+        submissionDate: new Date(),
+        clubCode: eventCode,
+      },
+    });
+
+    return NextResponse.json(workshop, { status: 200 });
+  } catch (error) {
+    console.error('Workshop submission error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

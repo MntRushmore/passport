@@ -12,12 +12,12 @@ export function middleware(request: NextRequest) {
     "/",
   ];
 
-  const protectedPaths = ["/dashboard"];
+  const protectedPaths = ["/dashboard", "/submit"];
   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
   const isPublic = publicPaths.some((path) => pathname.startsWith(path));
 
   if (isProtected && !session && !isPublic) {
-    return NextResponse.redirect("https://passport.hackclub.com/");
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
