@@ -41,7 +41,7 @@ const workshopData = {
 export default function SubmitWorkshopPage() {
   const params = useParams()
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const { toast } = useToast()
   const workshopId = params.workshop as string
   const workshop = workshopData[workshopId as keyof typeof workshopData]
@@ -50,16 +50,21 @@ export default function SubmitWorkshopPage() {
   const [isSuccess, setIsSuccess] = useState(false)
   const [eventCode, setEventCode] = useState("")
 
-  useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!user) {
-      router.push("/")
-    }
-  }, [user, router])
+  // Remove the automatic redirect - let the middleware handle authentication
+  // useEffect(() => {
+  //   if (!user && !isLoading) {
+  //     router.push("/")
+  //   }
+  // }, [user, isLoading, router])
 
-  if (!user) {
-    return null // Don't render anything while redirecting
+  if (!user && isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
+
+  // Remove user check - let the form handle missing user data gracefully
+  // if (!user) {
+  //   return null // Don't render anything while redirecting
+  // }
 
   if (!workshop) {
     return (
@@ -95,8 +100,8 @@ export default function SubmitWorkshopPage() {
     try {
       const formData = new FormData();
       formData.append("eventCode", eventCode);
-      formData.append("clubName", user.club?.name || "");
-      formData.append("leaderName", user.name);
+      formData.append("clubName", user?.club?.name || "");
+      formData.append("leaderName", user?.name || "");
       formData.append("workshopSlug", workshopId);
 
       const response = await fetch("/api/workshop", {
@@ -178,7 +183,7 @@ export default function SubmitWorkshopPage() {
                 </Label>
                 <Input
                   id="clubName"
-                  defaultValue={user.club?.name}
+                  defaultValue={user?.club?.name || ""}
                   className="border-gold-500 bg-white font-mono text-sm"
                   required
                   disabled
@@ -191,7 +196,7 @@ export default function SubmitWorkshopPage() {
                 </Label>
                 <Input
                   id="leaderName"
-                  defaultValue={user.name}
+                  defaultValue={user?.name || ""}
                   className="border-gold-500 bg-white font-mono text-sm"
                   required
                   disabled

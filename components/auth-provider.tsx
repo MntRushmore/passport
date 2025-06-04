@@ -5,9 +5,12 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 type User = {
   id: string
   name: string
-  club: string
+  club?: {
+    name: string
+    clubCode: string
+  }
   email: string
-  avatar: string
+  avatar?: string
 } | null
 
 type AuthContextType = {
@@ -25,22 +28,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check for user in localStorage on initial load
-    const storedUser = localStorage.getItem("hackclub-user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    // Check server-side authentication on initial load
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/auth/me')
+        if (response.ok) {
+          const userData = await response.json()
+          setUser(userData)
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
-    setIsLoading(false)
+    
+    checkAuth()
   }, [])
 
   const login = (userData: User) => {
     setUser(userData)
-    localStorage.setItem("hackclub-user", JSON.stringify(userData))
   }
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem("hackclub-user")
+    // Clear the session cookie by calling logout endpoint
+    fetch('/api/auth/logout', { method: 'POST' })
   }
 
   const value = {

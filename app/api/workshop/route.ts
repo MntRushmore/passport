@@ -9,25 +9,26 @@ export async function GET() {
 export async function POST(req: Request) {
   const formData = await req.formData();
 
-  const title = formData.get('title') as string;
-  const description = formData.get('description') as string;
-  const emoji = formData.get('emoji') as string;
-  const clubCode = (formData.get('clubCode') as string) || "global";
+  const eventCode = formData.get('eventCode') as string;
+  const clubName = formData.get('clubName') as string;
+  const leaderName = formData.get('leaderName') as string;
+  const workshopSlug = formData.get('workshopSlug') as string;
 
-  if (!title || !description || !emoji) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  if (!eventCode || !workshopSlug) {
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  const newWorkshop = await prisma.workshop.create({
+  // Create a workshop submission record
+  const workshop = await prisma.workshop.create({
     data: {
-      title,
-      description,
-      emoji,
-      clubCode,
-      completed: false,
-      submissionDate: null,
+      title: workshopSlug,
+      description: `Workshop submission for ${workshopSlug}`,
+      emoji: "🎯",
+      clubCode: eventCode,
+      completed: true,
+      submissionDate: new Date(),
     },
   });
 
-  return NextResponse.json(newWorkshop, { status: 201 });
+  return NextResponse.json(workshop, { status: 201 });
 }
