@@ -7,8 +7,8 @@ interface Workshop {
   description: string
   completed: boolean
   submissionDate: string | null
-  eventCode?: string
-  difficulty?: "beginner" | "intermediate" | "advanced"
+  eventCode?: string | null
+  difficulty?: string
   duration?: string
   skills?: string[]
 }
@@ -23,12 +23,11 @@ export function PassportPage({ workshop }: PassportPageProps) {
   const duration = workshop.duration || "1-2 hours"
   const skills = workshop.skills || ["Coding", "Design", "Problem Solving"]
 
-  // Determine difficulty color
   const difficultyColor = {
     beginner: "text-green-600",
     intermediate: "text-amber-600",
     advanced: "text-red-600",
-  }[difficulty]
+  }[difficulty as "beginner" | "intermediate" | "advanced"] || "text-stone-600"
 
   return (
     <div className="passport-container">

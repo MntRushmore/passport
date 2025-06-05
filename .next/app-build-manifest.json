@@ -1,30 +1,136 @@
 {
   "pages": {
-    "/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
+    "/_not-found/page": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/_not-found/page-2982640a7efc2288.js"
     ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+    "/layout": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/css/729e9497fbbe5e8f.css",
+      "static/chunks/app/layout-077306a603a902e5.js"
+    ],
+    "/api/auth/logout/route": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/api/auth/logout/route-e9d545b8cdc8428f.js"
+    ],
+    "/api/auth/slack/callback/route": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/api/auth/slack/callback/route-4056a43987db88e6.js"
     ],
     "/api/auth/me/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/me/route.js"
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/api/auth/me/route-e7b73191a5b970a9.js"
     ],
     "/api/auth/slack/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/slack/route.js"
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/api/auth/slack/route-c546936ac9e5a239.js"
     ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+    "/api/club/route": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/api/club/route-149dda761315b864.js"
+    ],
+    "/api/workshop/route": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/api/workshop/route-249df1e4a996af94.js"
+    ],
+    "/api/workshops/route": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/api/workshops/route-e2d42ed7c6a59f23.js"
+    ],
+    "/admin/loading": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/admin/loading-c00300ba21ee22ac.js"
+    ],
+    "/admin/page": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/512-3516c1d6b15e7238.js",
+      "static/chunks/216-4f12a3834cc62f7e.js",
+      "static/chunks/54-d570e55c4d70b7dd.js",
+      "static/chunks/app/admin/page-fec006f93dcc4cc5.js"
+    ],
+    "/create-club/page": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/create-club/page-e3b24b4562e981e5.js"
+    ],
+    "/dashboard/page": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/512-3516c1d6b15e7238.js",
+      "static/chunks/216-4f12a3834cc62f7e.js",
+      "static/chunks/app/dashboard/page-700bbc885a0ab321.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/512-3516c1d6b15e7238.js",
+      "static/chunks/app/page-7500746f6c34eeda.js"
+    ],
+    "/passport/page": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/512-3516c1d6b15e7238.js",
+      "static/chunks/216-4f12a3834cc62f7e.js",
+      "static/chunks/54-d570e55c4d70b7dd.js",
+      "static/chunks/259-2a4e136dbb55f3ed.js",
+      "static/chunks/app/passport/page-e2f6420057d2d2db.js"
+    ],
+    "/submit/layout": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/app/submit/layout-2494336fbcb86122.js"
+    ],
+    "/submit/[workshop]/page": [
+      "static/chunks/webpack-594a6243f17cfe94.js",
+      "static/chunks/e7327965-a776c44222c30a13.js",
+      "static/chunks/255-af444ee255f9e026.js",
+      "static/chunks/main-app-a649268eb5afc630.js",
+      "static/chunks/512-3516c1d6b15e7238.js",
+      "static/chunks/216-4f12a3834cc62f7e.js",
+      "static/chunks/app/submit/[workshop]/page-e97803e2d779ff9b.js"
     ]
   }
 }

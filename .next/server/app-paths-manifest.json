@@ -1,6 +1,16 @@
 {
-  "/api/auth/slack/route": "app/api/auth/slack/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/auth/logout/route": "app/api/auth/logout/route.js",
+  "/api/auth/slack/callback/route": "app/api/auth/slack/callback/route.js",
   "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/api/auth/slack/route": "app/api/auth/slack/route.js",
+  "/api/club/route": "app/api/club/route.js",
+  "/api/workshop/route": "app/api/workshop/route.js",
+  "/api/workshops/route": "app/api/workshops/route.js",
+  "/admin/page": "app/admin/page.js",
+  "/create-club/page": "app/create-club/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
   "/page": "app/page.js",
-  "/_not-found/page": "app/_not-found/page.js"
+  "/passport/page": "app/passport/page.js",
+  "/submit/[workshop]/page": "app/submit/[workshop]/page.js"
 }

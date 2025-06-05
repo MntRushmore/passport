@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Name and code are required." }, { status: 400 });
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const session = cookieStore.get("session");
   const userId = session?.value;
 
@@ -24,13 +24,6 @@ export async function POST(req: Request) {
         name,
         clubCode: code,
         userId: Number(userId),
-      },
-    });
-
-    await prisma.user.update({
-      where: { id: Number(userId) },
-      data: {
-        clubCode: newClub.clubCode,
       },
     });
 

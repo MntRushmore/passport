@@ -1,8 +1,7 @@
-import type { Workshop } from "@prisma/client";
 // import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -11,7 +10,7 @@ import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export default async function DashboardPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const session = cookieStore.get("session");
   const userId = Number(session?.value);
 
@@ -32,7 +31,7 @@ export default async function DashboardPage() {
 
   const clubCode = user.club?.clubCode;
 
-  const workshops: Workshop[] = await prisma.workshop.findMany({
+  const workshops = await prisma.workshop.findMany({
     where: {
       OR: [
         { clubCode: "global" },
@@ -41,17 +40,39 @@ export default async function DashboardPage() {
     }
   });
 
+  // Get user's workshop submissions
+  const userWorkshops = await prisma.userWorkshop.findMany({
+    where: { userId: userId },
+    include: { workshop: true }
+  });
+
+  // Create a map of workshop submissions by workshop ID
+  const submissionMap = new Map(
+    userWorkshops.map((uw: any) => [uw.workshopId, uw])
+  );
+
+  // Merge workshop data with user submission data
+  const workshopsWithUserData = workshops.map((workshop: any) => {
+    const submission = submissionMap.get(workshop.id);
+    return {
+      ...workshop,
+      completed: submission ? submission.completed : false,
+      submissionDate: submission?.submissionDate?.toISOString() || null,
+      eventCode: submission?.eventCode || null,
+    };
+  });
+
   const showCreateClubPopup = !user.club?.name || !user.club?.clubCode;
 
   if (showCreateClubPopup) {
     // still render the page, just with the popup
   }
 
-  const completedCount = (workshops || []).filter((w) => w.completed).length
-  const progressPercentage = (completedCount / (workshops.length || 1)) * 100
-  const lastSubmission = (workshops || [])
-    .filter((w) => w.completed)
-    .sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime())[0]
+  const completedCount = (workshopsWithUserData || []).filter((w: any) => w.completed).length
+  const progressPercentage = (completedCount / (workshopsWithUserData.length || 1)) * 100
+  const lastSubmission = (workshopsWithUserData || [])
+    .filter((w: any) => w.completed)
+    .sort((a: any, b: any) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime())[0]
 
   return (
     <>
@@ -88,8 +109,8 @@ export default async function DashboardPage() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16 border-2 border-gold-500">
-                  <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                  <AvatarFallback className="bg-navy-700 text-cream text-xl">{user.name.charAt(0)}</AvatarFallback>
+                  <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name || "User"} />
+                  <AvatarFallback className="bg-navy-700 text-cream text-xl">{user.name?.charAt(0) || "U"}</AvatarFallback>
                 </Avatar>
 
                 <div>
@@ -111,7 +132,7 @@ export default async function DashboardPage() {
                 <div className="ml-auto text-right">
                   <div className="font-mono text-sm text-navy-700">
                     <span className="text-3xl font-bold">{completedCount}</span>
-                    <span className="text-stone-600">/{workshops.length}</span>
+                    <span className="text-stone-600">/{workshopsWithUserData.length}</span>
                   </div>
                   <p className="font-mono text-xs text-stone-600">workshops completed</p>
                 </div>
@@ -129,15 +150,15 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent className="pt-6">
               <Progress value={progressPercentage} className="h-3 bg-stone-200" indicatorClassName="bg-navy-700" />
-              <p className="text-xs font-mono mt-3 text-stone-600">
-                {completedCount === workshops.length
+              <p className="font-mono text-sm text-stone-600">
+                {completedCount === workshopsWithUserData.length
                   ? "All workshops completed!"
-                  : `${workshops.length - completedCount} workshops remaining`}
+                  : `${workshopsWithUserData.length - completedCount} workshops remaining`}
               </p>
 
               <div className="mt-4 pt-4 border-t border-gold-500">
                 <div className="grid grid-cols-4 gap-2">
-                  {(workshops || []).map((workshop) => (
+                  {(workshops || []).map((workshop: any) => (
                     <div
                       key={workshop.id}
                       className={`flex items-center justify-center aspect-square rounded-full text-2xl
@@ -187,13 +208,13 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent className="pt-6">
               <div className="font-mono">
-                {completedCount < workshops.length ? (
+                {completedCount < workshopsWithUserData.length ? (
                   <div>
                     <p className="text-sm text-navy-700 mb-3">Continue your journey:</p>
-                    {(workshops || [])
-                      .filter((w) => !w.completed)
+                    {(workshopsWithUserData || [])
+                      .filter((w: any) => !w.completed)
                       .slice(0, 2)
-                      .map((workshop) => (
+                      .map((workshop: any) => (
                         <Link
                           key={workshop.id}
                           href={`/submit/${workshop.id}`}
@@ -225,7 +246,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {(workshops || []).map((workshop) => (
+              {(workshopsWithUserData || []).map((workshop: any) => (
                 <div
                   key={workshop.id}
                   className="border border-gold-500 rounded-md p-4 bg-white relative overflow-hidden"

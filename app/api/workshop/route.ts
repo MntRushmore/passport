@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { cookies } from 'next/headers';
 
 export async function GET() {
   const workshops = await prisma.workshop.findMany();
@@ -19,8 +20,21 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Get user ID from session
+    const cookieStore = await cookies();
+    const session = cookieStore.get("session");
+    const userId = Number(session?.value);
+
+    if (!userId || isNaN(userId)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Convert workshopSlug to workshop ID
     const workshopId = parseInt(workshopSlug);
+    
+    if (isNaN(workshopId)) {
+      return NextResponse.json({ error: 'Invalid workshop ID' }, { status: 400 });
+    }
     
     // Find the existing workshop
     const existingWorkshop = await prisma.workshop.findUnique({
@@ -31,17 +45,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Workshop not found' }, { status: 404 });
     }
 
-    // Update the workshop to mark it as completed
-    const workshop = await prisma.workshop.update({
-      where: { id: workshopId },
-      data: {
+    // Create or update the user workshop submission
+    const userWorkshop = await prisma.userWorkshop.upsert({
+      where: { 
+        userId_workshopId: {
+          userId: userId,
+          workshopId: workshopId
+        }
+      },
+      update: {
         completed: true,
         submissionDate: new Date(),
-        clubCode: eventCode,
+        eventCode: eventCode,
+      },
+      create: {
+        userId: userId,
+        workshopId: workshopId,
+        completed: true,
+        submissionDate: new Date(),
+        eventCode: eventCode,
       },
     });
 
-    return NextResponse.json(workshop, { status: 200 });
+    return NextResponse.json(userWorkshop, { status: 200 });
   } catch (error) {
     console.error('Workshop submission error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -168,8 +168,8 @@ useEffect(() => {
           </Link>
           <h1 className="text-2xl font-serif font-bold text-navy-700">Admin Dashboard</h1>
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-            <AvatarFallback className="bg-navy-700 text-cream">{user.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name || "User"} />
+            <AvatarFallback className="bg-navy-700 text-cream">{user?.name?.charAt(0) || "U"}</AvatarFallback>
           </Avatar>
         </div>
 

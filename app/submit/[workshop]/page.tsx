@@ -1,4 +1,3 @@
-/* eslint-disable */
 "use client"
 
 import type React from "react"
@@ -15,27 +14,14 @@ import { ArrowLeft, CheckCircle } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 
-const workshopData = {
-  1: {
-    title: "Glaze",
-    emoji: "🍩",
-    description: "Create a delicious donut-themed web app with interactive glazing features.",
-  },
-  2: {
-    title: "Grub",
-    emoji: "🍟",
-    description: "Build a fast food ordering system with real-time updates and notifications.",
-  },
-  3: {
-    title: "Boba Drops",
-    emoji: "🧋",
-    description: "Design a bubble tea customization app with drag-and-drop functionality.",
-  },
-  4: {
-    title: "Toppings",
-    emoji: "🍦",
-    description: "Create an ice cream shop simulator with flavor mixing and topping options.",
-  },
+interface Workshop {
+  id: string;
+  title: string;
+  emoji: string;
+  description: string;
+  completed: boolean;
+  submissionDate: string | null;
+  eventCode: string | null;
 }
 
 export default function SubmitWorkshopPage() {
@@ -44,28 +30,48 @@ export default function SubmitWorkshopPage() {
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
   const workshopParam = params.workshop as string
-  const workshopId = parseInt(workshopParam) || 1
-  const workshop = workshopData[workshopId as keyof typeof workshopData]
+  const workshopId = workshopParam // Keep as string to match API response
 
+  const [workshop, setWorkshop] = useState<Workshop | null>(null)
+  const [workshops, setWorkshops] = useState<Workshop[]>([])
+  const [loadingWorkshop, setLoadingWorkshop] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [eventCode, setEventCode] = useState("")
 
-  // Remove the automatic redirect - let the middleware handle authentication
-  // useEffect(() => {
-  //   if (!user && !isLoading) {
-  //     router.push("/")
-  //   }
-  // }, [user, isLoading, router])
+  useEffect(() => {
+    // Fetch workshops data
+    const fetchWorkshops = async () => {
+      try {
+        const response = await fetch('/api/workshops')
+        if (response.ok) {
+          const data = await response.json()
+          setWorkshops(data)
+          // Find the specific workshop
+          const foundWorkshop = data.find((w: Workshop) => w.id === workshopId)
+          setWorkshop(foundWorkshop || null)
+        } else {
+          console.error('Failed to fetch workshops')
+        }
+      } catch (error) {
+        console.error('Error fetching workshops:', error)
+      } finally {
+        setLoadingWorkshop(false)
+      }
+    }
+
+    if (user) {
+      fetchWorkshops()
+    }
+  }, [user, workshopId])
 
   if (!user && isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
 
-  // Remove user check - let the form handle missing user data gracefully
-  // if (!user) {
-  //   return null // Don't render anything while redirecting
-  // }
+  if (loadingWorkshop) {
+    return <div className="min-h-screen flex items-center justify-center">Loading workshop...</div>
+  }
 
   if (!workshop) {
     return (
@@ -103,7 +109,7 @@ export default function SubmitWorkshopPage() {
       formData.append("eventCode", eventCode);
       formData.append("clubName", user?.club?.name || "");
       formData.append("leaderName", user?.name || "");
-      formData.append("workshopSlug", workshopId.toString());
+      formData.append("workshopSlug", workshopId); // Use string ID directly
 
       const response = await fetch("/api/workshop", {
         method: "POST",

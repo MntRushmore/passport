@@ -21,7 +21,7 @@ export function LoginButton() {
     login({
       id: "user123",
       name: "Alex Chen",
-      club: "Coding Chefs",
+      club: { name: "Coding Chefs", clubCode: "chefs001" },
       email: "alex@example.com",
       avatar: "/placeholder.svg?height=40&width=40",
     })

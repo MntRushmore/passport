@@ -11,77 +11,75 @@ import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-// Enhanced workshop data
-const workshops = [
-  {
-    id: "glaze",
-    title: "Glaze",
-    emoji: "🍩",
-    description:
-      "Create a delicious donut-themed web app with interactive glazing features and custom toppings. Learn about CSS animations and interactive elements.",
-    completed: true,
-    submissionDate: "2023-04-15",
-    eventCode: "GLAZE-123",
-    difficulty: "beginner",
-    duration: "1-2 hours",
-    skills: ["CSS", "JavaScript", "Animation"],
-  },
-  {
-    id: "grub",
-    title: "Grub",
-    emoji: "🍟",
-    description:
-      "Build a fast food ordering system with real-time updates and notifications. Explore state management and form handling in web applications.",
-    completed: false,
-    submissionDate: null,
-    eventCode: null,
-    difficulty: "intermediate",
-    duration: "2-3 hours",
-    skills: ["React", "State Management", "Forms"],
-  },
-  {
-    id: "boba",
-    title: "Boba Drops",
-    emoji: "🧋",
-    description:
-      "Design a bubble tea customization app with drag-and-drop functionality. Learn about advanced UI interactions and custom animations.",
-    completed: false,
-    submissionDate: null,
-    eventCode: null,
-    difficulty: "intermediate",
-    duration: "2-3 hours",
-    skills: ["Drag & Drop", "UI Design", "JavaScript"],
-  },
-  {
-    id: "swirl",
-    title: "Swirl",
-    emoji: "🍦",
-    description:
-      "Create an ice cream shop simulator with flavor mixing and topping options. Dive into color theory and dynamic content generation.",
-    completed: true,
-    submissionDate: "2023-05-02",
-    eventCode: "SWIRL-456",
-    difficulty: "advanced",
-    duration: "3-4 hours",
-    skills: ["Canvas API", "Color Theory", "JavaScript"],
-  },
-]
+interface Workshop {
+  id: string;
+  title: string;
+  emoji: string;
+  description: string;
+  completed: boolean;
+  submissionDate: string | null;
+  eventCode: string | null;
+  clubCode: string;
+  difficulty: string;
+  duration: string;
+  skills: string[];
+}
 
 export default function PassportView() {
   const [currentPage, setCurrentPage] = useState(0)
   const [transitioning, setTransitioning] = useState(false)
+  const [workshops, setWorkshops] = useState<Workshop[]>([])
+  const [loading, setLoading] = useState(true)
   const { user, logout } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!user) {
       router.push("/")
     }
   }, [user, router])
 
+  useEffect(() => {
+    const fetchWorkshops = async () => {
+      try {
+        const response = await fetch('/api/workshops')
+        if (response.ok) {
+          const data = await response.json()
+          setWorkshops(data)
+        }
+      } catch (error) {
+        console.error('Error fetching workshops:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (user) {
+      fetchWorkshops()
+    }
+  }, [user])
+
   if (!user) {
-    return null // Don't render anything while redirecting
+    return null
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-stone-100 flex flex-col items-center justify-center p-4">
+        <p>Loading workshops...</p>
+      </div>
+    )
+  }
+
+  if (workshops.length === 0) {
+    return (
+      <div className="min-h-screen bg-stone-100 flex flex-col items-center justify-center p-4">
+        <p>No workshops available.</p>
+        <Button asChild className="mt-4 bg-navy-700 hover:bg-navy-800 text-cream font-serif">
+          <Link href="/dashboard">Return to Dashboard</Link>
+        </Button>
+      </div>
+    )
   }
 
   const goToNextPage = () => {
@@ -112,7 +110,6 @@ export default function PassportView() {
   return (
     <div className="min-h-screen bg-stone-100 flex flex-col items-center p-4 md:p-8">
       <div className="max-w-4xl w-full">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <Link href="/dashboard">
             <Button variant="ghost" className="text-navy-700 font-serif flex items-center">
@@ -136,7 +133,7 @@ export default function PassportView() {
               <div className="flex items-center justify-start p-2">
                 <div className="flex flex-col space-y-1 leading-none">
                   <p className="font-medium text-sm text-navy-700">{user.name}</p>
-                  <p className="w-[200px] truncate text-xs text-stone-500">{user.club}</p>
+                  <p className="w-[200px] truncate text-xs text-stone-500">{user.club?.name || 'No club'}</p>
                 </div>
               </div>
               <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
@@ -147,7 +144,6 @@ export default function PassportView() {
           </DropdownMenu>
         </div>
 
-        {/* Passport Navigation */}
         <div className="flex items-center justify-center mb-6 gap-2">
           {workshops.map((workshop, index) => (
             <button
@@ -177,13 +173,11 @@ export default function PassportView() {
           ))}
         </div>
 
-        {/* Main Passport Display */}
         <div className="relative">
           <PageTransition currentPage={currentPage}>
             <PassportPage workshop={workshops[currentPage]} />
           </PageTransition>
 
-          {/* Navigation Controls */}
           <div className="flex justify-between mt-6">
             <Button
               variant="outline"
@@ -210,11 +204,9 @@ export default function PassportView() {
             </Button>
           </div>
 
-          {/* Action Button */}
           <div className="mt-6 flex justify-center">
             <Button
               onClick={() => {
-                console.log(`Navigating to /submit/${workshops[currentPage].id}`)
                 router.push(`/submit/${workshops[currentPage].id}`)
               }}
               className="bg-navy-700 hover:bg-navy-800 text-cream font-serif"

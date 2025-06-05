@@ -11,8 +11,6 @@ async function main() {
         title: "Glaze",
         emoji: "🍩",
         description: "Create a delicious donut-themed web app...",
-        completed: false,
-        submissionDate: null,
         clubCode: "global",
       },
       {
@@ -20,8 +18,6 @@ async function main() {
         title: "Grub",
         emoji: "🍟",
         description: "Build a fast food ordering system...",
-        completed: false,
-        submissionDate: null,
         clubCode: "global",
       },
     ],

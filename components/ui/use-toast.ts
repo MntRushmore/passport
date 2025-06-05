@@ -15,5 +15,6 @@ export function useToast() {
 
   return {
     toast: mockToast,
+    toasts: [] as any[], // Mock empty toasts array
   }
 }
