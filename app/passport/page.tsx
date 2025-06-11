@@ -175,7 +175,7 @@ export default function PassportView() {
 
         <div className="relative">
           <PageTransition currentPage={currentPage}>
-            <PassportPage workshop={workshops[currentPage]} />
+            <PassportPage workshop={workshops[currentPage]} index={currentPage} />
           </PageTransition>
 
           <div className="flex justify-between mt-6">

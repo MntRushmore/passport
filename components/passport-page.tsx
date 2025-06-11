@@ -15,9 +15,10 @@ interface Workshop {
 
 interface PassportPageProps {
   workshop: Workshop
+  index?: number
 }
 
-export function PassportPage({ workshop }: PassportPageProps) {
+export function PassportPage({ workshop, index = 0 }: PassportPageProps) {
   // Add some default values if not provided
   const difficulty = workshop.difficulty || "beginner"
   const duration = workshop.duration || "1-2 hours"
@@ -28,6 +29,30 @@ export function PassportPage({ workshop }: PassportPageProps) {
     intermediate: "text-amber-600",
     advanced: "text-red-600",
   }[difficulty as "beginner" | "intermediate" | "advanced"] || "text-stone-600"
+
+  // Generate unique stamp positioning based on workshop ID to prevent overlaps
+  const getStampStyle = () => {
+    // Create a simple hash from the workshop ID
+    const hash = workshop.id.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0)
+      return a & a
+    }, 0)
+    
+    // Predefined positions that don't overlap
+    const positions = [
+      { top: '1.5rem', right: '1.5rem', transform: 'rotate(12deg)' },
+      { top: '2rem', right: '5rem', transform: 'rotate(-8deg)' },
+      { top: '1rem', right: '8rem', transform: 'rotate(15deg)' },
+      { top: '3rem', right: '2rem', transform: 'rotate(-12deg)' },
+      { top: '1.5rem', right: '6.5rem', transform: 'rotate(8deg)' },
+      { top: '2.5rem', right: '4rem', transform: 'rotate(-15deg)' },
+    ]
+    
+    const positionIndex = Math.abs(hash) % positions.length
+    return positions[positionIndex]
+  }
+
+  const stampStyle = getStampStyle()
 
   return (
     <div className="passport-container">
@@ -143,7 +168,10 @@ export function PassportPage({ workshop }: PassportPageProps) {
         </div>
 
         {/* Stamp */}
-        <div className={`passport-stamp ${workshop.completed ? "passport-stamp-completed" : ""}`}>
+        <div 
+          className={`passport-stamp ${workshop.completed ? "passport-stamp-completed" : ""}`}
+          style={stampStyle}
+        >
           <div className="passport-stamp-content">
             <span className="passport-stamp-emoji">{workshop.emoji}</span>
             <span className="passport-stamp-text">{workshop.title}</span>

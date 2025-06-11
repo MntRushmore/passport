@@ -194,7 +194,8 @@
 }
 
 .passport-stamp {
-  @apply absolute top-6 right-6 w-24 h-24 border-2 border-dashed border-gold-500 rounded-full flex items-center justify-center transform rotate-12 bg-cream bg-opacity-50;
+  @apply absolute w-24 h-24 border-2 border-dashed border-gold-500 rounded-full flex items-center justify-center bg-cream bg-opacity-50;
+  /* Remove fixed positioning - will be set via inline styles */
 }
 
 .passport-stamp-completed {
