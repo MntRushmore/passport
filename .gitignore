@@ -20,3 +20,4 @@ pnpm-debug.log*
 
 # Optional: local IDE settings
 .vscode
+.env*.local
