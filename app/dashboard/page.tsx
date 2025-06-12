@@ -29,16 +29,8 @@ export default async function DashboardPage() {
     return <p>User not found</p>;
   }
 
-  const clubCode = user.club?.clubCode;
-
-  const workshops = await prisma.workshop.findMany({
-    where: {
-      OR: [
-        { clubCode: "global" },
-        ...(clubCode ? [{ clubCode: clubCode }] : [])
-      ]
-    }
-  });
+  // const clubCode = user.club?.clubCode; // clubCode no longer needed
+  const workshops = await prisma.workshop.findMany();
 
   // Get user's workshop submissions
   const userWorkshops = await prisma.userWorkshop.findMany({
@@ -70,6 +62,17 @@ export default async function DashboardPage() {
 
   const completedCount = (workshopsWithUserData || []).filter((w: any) => w.completed).length
   const progressPercentage = (completedCount / (workshopsWithUserData.length || 1)) * 100
+  // Compute display message for progress
+  let statusMessage: string;
+  const totalWorkshops = workshopsWithUserData.length;
+  if (totalWorkshops === 0) {
+    statusMessage = "No workshops available";
+  } else if (completedCount === totalWorkshops) {
+    statusMessage = "All workshops completed!";
+  } else {
+    const remaining = totalWorkshops - completedCount;
+    statusMessage = `${remaining} workshop${remaining > 1 ? "s" : ""} remaining`;
+  }
   const lastSubmission = (workshopsWithUserData || [])
     .filter((w: any) => w.completed)
     .sort((a: any, b: any) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime())[0]
@@ -151,14 +154,12 @@ export default async function DashboardPage() {
             <CardContent className="pt-6">
               <Progress value={progressPercentage} className="h-3 bg-stone-200" indicatorClassName="bg-navy-700" />
               <p className="font-mono text-sm text-stone-600">
-                {completedCount === workshopsWithUserData.length
-                  ? "All workshops completed!"
-                  : `${workshopsWithUserData.length - completedCount} workshops remaining`}
+                {statusMessage}
               </p>
 
               <div className="mt-4 pt-4 border-t border-gold-500">
                 <div className="grid grid-cols-4 gap-2">
-                  {(workshops || []).map((workshop: any) => (
+                  {(workshopsWithUserData || []).map((workshop: any) => (
                     <div
                       key={workshop.id}
                       className={`flex items-center justify-center aspect-square rounded-full text-2xl
