@@ -25,43 +25,40 @@ export async function GET() {
 
     const clubCode = user.club?.clubCode;
 
-    // Get workshops available to this user
-    const workshops = await prisma.workshop.findMany({
+    // Fetch workshops and include only this user's submissions
+    const rawWorkshops = await prisma.workshop.findMany({
       where: {
         OR: [
-          { clubCode: "global" },
-          ...(clubCode ? [{ clubCode: clubCode }] : [])
-        ]
-      }
+          { clubCode: 'global' },
+          ...(clubCode ? [{ clubCode }] : []),
+        ],
+      },
+      include: {
+        userWorkshops: {
+          where: { userId },
+          select: { completed: true, submissionDate: true, eventCode: true },
+        },
+      },
+      orderBy: { id: 'asc' },
     });
 
-    // Get user's workshop submissions
-    const userWorkshops = await prisma.userWorkshop.findMany({
-      where: { userId: userId },
-      include: { workshop: true }
-    });
-
-    // Create a map of workshop submissions by workshop ID
-    const submissionMap = new Map(
-      userWorkshops.map((uw: any) => [uw.workshopId, uw])
-    );
-
-    // Merge workshop data with user submission data
-    const workshopsWithUserData = workshops.map((workshop: any) => {
-      const userSubmission: any = submissionMap.get(workshop.id);
+    // Merge workshop data with user-specific submission data
+    const workshopsWithUserData = rawWorkshops.map(w => {
+      const uw = w.userWorkshops[0];
       return {
-        id: workshop.id.toString(), // Convert to string for component compatibility
-        title: workshop.title,
-        emoji: workshop.emoji,
-        description: workshop.description,
-        clubCode: workshop.clubCode,
-        completed: userSubmission?.completed || false,
-        submissionDate: userSubmission?.submissionDate?.toISOString().split('T')[0] || null, // Format as YYYY-MM-DD
-        eventCode: userSubmission?.eventCode || null,
-        // Add default values for passport page compatibility
+        id: w.id.toString(),
+        title: w.title,
+        emoji: w.emoji,
+        description: w.description,
+        clubCode: w.clubCode,
+        completed: uw?.completed ?? false,
+        submissionDate: uw?.submissionDate
+          ? uw.submissionDate.toISOString().split('T')[0]
+          : null,
+        eventCode: uw?.eventCode ?? null,
         difficulty: "intermediate" as const,
         duration: "2-3 hours",
-        skills: ["Coding", "Problem Solving"]
+        skills: ["Coding", "Problem Solving"],
       };
     });
 
