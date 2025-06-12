@@ -27,12 +27,6 @@ export async function GET() {
 
     // Fetch workshops and include only this user's submissions
     const rawWorkshops = await prisma.workshop.findMany({
-      where: {
-        OR: [
-          { clubCode: 'global' },
-          ...(clubCode ? [{ clubCode }] : []),
-        ],
-      },
       include: {
         userWorkshops: {
           where: { userId },
