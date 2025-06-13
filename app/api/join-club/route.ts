@@ -20,12 +20,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing clubCode" }, { status: 400 });
   }
 
-  const club = await prisma.club.findUnique({
+  let club = await prisma.club.findUnique({
     where: { clubCode },
   });
 
   if (!club) {
-    return NextResponse.json({ error: "Club not found" }, { status: 404 });
+    const res = await fetch("https://dashboard.hackclub.com/api/v1/clubs", {
+      headers: {
+        Authorization: `Bearer ${process.env.HC_API_KEY}`,
+      },
+    });
+    const data = await res.json();
+    const match = data.clubs.find((c: any) => c.id.toString() === clubCode);
+
+    if (!match) {
+      return NextResponse.json({ error: "Club not found" }, { status: 404 });
+    }
+
+    club = await prisma.club.create({
+      data: {
+        name: match.name,
+        clubCode: match.id.toString(),
+      },
+    });
   }
 
   await prisma.user.update({

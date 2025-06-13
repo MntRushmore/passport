@@ -1,10 +1,22 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export default function JoinClubPopup({ user, clubs }: { user: any, clubs: any[] }) {
+  const searchParams = useSearchParams();
+  const justJoined = searchParams.get("joined") === "1";
+
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
+  const [showFlash, setShowFlash] = useState(justJoined);
+
+  useEffect(() => {
+    if (justJoined) {
+      const timer = setTimeout(() => setShowFlash(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [justJoined]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     setLoading(true);
@@ -12,6 +24,11 @@ export default function JoinClubPopup({ user, clubs }: { user: any, clubs: any[]
 
   return (
     <>
+      {showFlash && (
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-cream border border-gold-500 text-navy-700 font-serif rounded px-5 py-3 shadow-xl z-50 text-center text-base">
+          ✅ You’ve successfully joined a club!
+        </div>
+      )}
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
           <div className="bg-cream border border-gold-500 rounded-lg shadow-lg max-w-md w-full p-6 text-center">
@@ -39,8 +56,8 @@ export default function JoinClubPopup({ user, clubs }: { user: any, clubs: any[]
               <option value="">Select your club...</option>
               {Array.isArray(clubs) &&
                 clubs.map((club) => (
-                  <option key={club.code} value={club.code}>
-                    {club.name} ({club.city})
+                  <option key={club.id} value={club.id.toString()}>
+                    {club.name} ({club.location})
                   </option>
                 ))}
             </select>
