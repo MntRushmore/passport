@@ -13,9 +13,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { clubCode } = await req.json();
+  const formData = await req.formData();
+  const clubCode = formData.get("clubCode");
 
-  if (!clubCode) {
+  if (typeof clubCode !== "string") {
     return NextResponse.json({ error: "Missing clubCode" }, { status: 400 });
   }
 
@@ -32,5 +33,5 @@ export async function POST(req: Request) {
     data: { club: { connect: { id: club.id } } },
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.redirect(new URL("/dashboard", req.url));
 }
