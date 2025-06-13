@@ -12,7 +12,14 @@ import prisma from "@/lib/prisma";
 export default async function DashboardPage() {
   const cookieStore = await cookies();
   const session = cookieStore.get("session");
-  const userId = Number(session?.value);
+  let userId: number | null = null;
+  try {
+    const sessionValue = session?.value || "";
+    const parsed = JSON.parse(sessionValue);
+    userId = parsed.user?.id;
+  } catch (e) {
+    console.error("Failed to parse session cookie:", session?.value);
+  }
 
   if (!userId || isNaN(userId)) {
     console.error("Invalid userId in session:", session?.value);
@@ -58,9 +65,10 @@ export default async function DashboardPage() {
 
   let clubs: any[] = [];
   try {
-    const host = headers().get("host");
-    const protocol = host?.includes("localhost") ? "http" : "https";
-    const baseUrl = `${protocol}://${host}`;
+    const headersList = headers();
+    const host = headersList.get("host");
+    const proto = headersList.get("x-forwarded-proto") || "https";
+    const baseUrl = `${proto}://${host}`;
     const res = await fetch(`${baseUrl}/api/get-clubs`, {
       cache: "no-store",
     });
