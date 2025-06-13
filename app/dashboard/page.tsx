@@ -96,34 +96,7 @@ export default async function DashboardPage() {
             <p className="text-sm text-stone-700 mb-6 font-mono">
               You haven’t joined a club yet. Choose your club to get started!
             </p>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const form = e.currentTarget;
-                const clubCode = form.clubCode.value;
-                const button = form.querySelector("button");
-                if (button) button.disabled = true;
-
-                try {
-                  const res = await fetch("/api/join-club", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ clubCode }),
-                  });
-
-                  if (res.ok) {
-                    window.location.reload();
-                  } else {
-                    alert("Failed to join club");
-                    if (button) button.disabled = false;
-                  }
-                } catch {
-                  alert("Error joining club");
-                  if (button) button.disabled = false;
-                }
-              }}
-              className="flex flex-col gap-4"
-            >
+            <form action="/api/join-club" method="POST" className="flex flex-col gap-4">
               <select
                 name="clubCode"
                 required

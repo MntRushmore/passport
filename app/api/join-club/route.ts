@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+  const cookie = cookies().get("session")?.value;
+  const session = cookie ? JSON.parse(cookie) : null;
+  const email = session?.user?.email;
+
+  if (!email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -24,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   await prisma.user.update({
-    where: { email: session.user.email },
+    where: { email },
     data: { club: { connect: { id: club.id } } },
   });
 
