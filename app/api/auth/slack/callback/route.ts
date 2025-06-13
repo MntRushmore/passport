@@ -70,7 +70,12 @@ export async function GET(req: NextRequest) {
   });
 
   const response = NextResponse.redirect("https://passport.hackclub.com/dashboard");
-  response.cookies.set("session", user.id.toString(), {
+  response.cookies.set("session", JSON.stringify({
+    user: {
+      email: user.email,
+      id: user.id,
+    }
+  }), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
