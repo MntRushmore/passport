@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 export async function POST(req: Request) {
   const cookie = cookies().get("session")?.value;
   const session = cookie ? JSON.parse(cookie) : null;
+  console.log("🔍 Raw session cookie:", cookie);
+  console.log("🔍 Parsed session object:", session);
   const email = session?.user?.email;
 
   if (!email) {
