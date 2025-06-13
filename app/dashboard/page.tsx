@@ -56,6 +56,16 @@ export default async function DashboardPage() {
 
   const showCreateClubPopup = !user.club?.name || !user.club?.clubCode;
 
+  let clubs: any[] = [];
+  try {
+    const res = await fetch("/api/get-clubs", {
+      cache: "no-store",
+    });
+    clubs = await res.json();
+  } catch (e) {
+    console.error("Failed to fetch clubs from API", e);
+  }
+
   if (showCreateClubPopup) {
     // still render the page, just with the popup
   }
@@ -84,13 +94,54 @@ export default async function DashboardPage() {
           <div className="bg-cream border border-gold-500 rounded-lg shadow-lg max-w-md w-full p-6">
             <h2 className="text-2xl font-serif text-navy-700 mb-4">Welcome, {user.name}!</h2>
             <p className="text-sm text-stone-700 mb-6 font-mono">
-              You haven’t created a club yet. Let’s get started and launch your journey.
+              You haven’t joined a club yet. Choose your club to get started!
             </p>
-            <div className="flex justify-end">
-              <Button asChild className="bg-navy-700 hover:bg-navy-800 text-cream font-serif">
-                <Link href="/create-club">Create a Club</Link>
-              </Button>
-            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const form = e.currentTarget;
+                const clubCode = form.clubCode.value;
+                const button = form.querySelector("button");
+                if (button) button.disabled = true;
+
+                try {
+                  const res = await fetch("/api/join-club", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ clubCode }),
+                  });
+
+                  if (res.ok) {
+                    window.location.reload();
+                  } else {
+                    alert("Failed to join club");
+                    if (button) button.disabled = false;
+                  }
+                } catch {
+                  alert("Error joining club");
+                  if (button) button.disabled = false;
+                }
+              }}
+              className="flex flex-col gap-4"
+            >
+              <select
+                name="clubCode"
+                required
+                className="p-2 rounded border border-stone-300 font-mono text-sm text-navy-700"
+              >
+                <option value="">Select your club...</option>
+                {clubs.map((club) => (
+                  <option key={club.code} value={club.code}>
+                    {club.name} ({club.city})
+                  </option>
+                ))}
+              </select>
+              <div className="flex justify-end">
+                <Button type="submit" className="bg-navy-700 hover:bg-navy-800 text-cream font-serif">
+                  Join Club
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
