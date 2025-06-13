@@ -33,8 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const response = await fetch('/api/auth/me')
         if (response.ok) {
-          const userData = await response.json()
-          setUser(userData)
+          const sessionData = await response.json()
+          setUser(sessionData.user ?? sessionData)
         }
       } catch (error) {
         console.error('Auth check failed:', error)
