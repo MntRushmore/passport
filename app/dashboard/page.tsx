@@ -75,7 +75,8 @@ try {
   });
 
   const text = await res.text();
-  clubs = JSON.parse(text);
+  const parsed = JSON.parse(text);
+  clubs = parsed.clubs || [];
 
   if (!Array.isArray(clubs)) throw new Error("Clubs is not an array");
 

@@ -14,14 +14,14 @@ export async function POST(req: Request) {
   }
 
   const formData = await req.formData();
-  const clubCode = formData.get("clubCode");
+  const hcId = formData.get("hcId");
 
-  if (typeof clubCode !== "string") {
-    return NextResponse.json({ error: "Missing clubCode" }, { status: 400 });
+  if (typeof hcId !== "string") {
+    return NextResponse.json({ error: "Missing hcId" }, { status: 400 });
   }
 
   let club = await prisma.club.findUnique({
-    where: { hcId: parseInt(clubCode) },
+    where: { hcId: parseInt(hcId) },
   });
 
   if (!club) {
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       },
     });
     const data = await res.json();
-    const match = data.clubs.find((c: any) => c.id.toString() === clubCode);
+    const match = data.clubs.find((c: any) => c.id.toString() === hcId);
 
     if (!match) {
       return NextResponse.json({ error: "Club not found" }, { status: 404 });
@@ -49,6 +49,27 @@ export async function POST(req: Request) {
     where: { email },
     data: { club: { connect: { id: club.id } } },
   });
+
+  const workshops = await prisma.workshop.findMany();
+
+  await Promise.all(
+    workshops.map((workshop) =>
+      prisma.userWorkshop.upsert({
+        where: {
+          userId_workshopId: {
+            userId: session.user.id,
+            workshopId: workshop.id,
+          },
+        },
+        update: {},
+        create: {
+          userId: session.user.id,
+          workshopId: workshop.id,
+          status: "INCOMPLETE",
+        },
+      })
+    )
+  );
 
   return NextResponse.redirect(new URL("/dashboard", req.url));
 }
