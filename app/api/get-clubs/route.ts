@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     const data = await res.json();
-    return NextResponse.json(data.clubs);
+    return NextResponse.json({ clubs: data.clubs });
   } catch (err) {
     console.error("Internal error", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
