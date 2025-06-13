@@ -25,13 +25,23 @@ export async function POST(req: Request) {
   });
 
   if (!club) {
-    const res = await fetch("https://dashboard.hackclub.com/api/v1/clubs", {
-      headers: {
-        Authorization: `Bearer ${process.env.HC_API_KEY}`,
-      },
-    });
-    const data = await res.json();
-    const match = data.clubs.find((c: any) => c.id.toString() === hcId);
+    let page = 1;
+    let clubs: any[] = [];
+
+    while (true) {
+      const res = await fetch(`https://dashboard.hackclub.com/api/v1/clubs?page=${page}&per_page=100`, {
+        headers: {
+          Authorization: `Bearer ${process.env.HC_API_KEY}`,
+        },
+      });
+      const data = await res.json();
+      clubs = clubs.concat(data.clubs);
+
+      if (!data.pagination?.has_next) break;
+      page++;
+    }
+
+    const match = clubs.find((c: any) => c.id.toString() === hcId);
 
     if (!match) {
       return NextResponse.json({ error: "Club not found" }, { status: 404 });
