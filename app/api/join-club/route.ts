@@ -14,14 +14,14 @@ export async function POST(req: Request) {
   }
 
   const formData = await req.formData();
-  const hcId = formData.get("hcId");
+  const clubCode = formData.get("clubCode");
 
-  if (typeof hcId !== "string") {
-    return NextResponse.json({ error: "Missing hcId" }, { status: 400 });
+  if (typeof clubCode !== "string") {
+    return NextResponse.json({ error: "Missing clubCode" }, { status: 400 });
   }
 
   let club = await prisma.club.findUnique({
-    where: { hcId: parseInt(hcId) },
+    where: { clubCode: parseInt(clubCode) },
   });
 
   if (!club) {
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       page++;
     }
 
-    const match = clubs.find((c: any) => c.id.toString() === hcId);
+    const match = clubs.find((c: any) => c.id.toString() === clubCode);
 
     if (!match) {
       return NextResponse.json({ error: "Club not found" }, { status: 404 });
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     club = await prisma.club.create({
       data: {
         name: match.name,
-        hcId: match.id,
+        clubCode: match.id,
       },
     });
   }

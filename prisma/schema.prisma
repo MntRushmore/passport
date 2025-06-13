@@ -22,7 +22,7 @@ model User {
 model Club {
   id       Int    @id @default(autoincrement())
   name     String
-  hcId     Int    @unique
+  clubCode Int    @unique
   userId   Int    @unique
   user     User   @relation("UserClub", fields: [userId], references: [id])
 }
