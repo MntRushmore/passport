@@ -1,5 +1,3 @@
-
-
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -10,7 +8,8 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch("https://dashboard.hackclub.com/api/v1/clubs?per_page=100", {
+    const endpoint = process.env.HC_API_URL || "https://dashboard.hackclub.com/api/v1/clubs?per_page=100";
+    const res = await fetch(endpoint, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },

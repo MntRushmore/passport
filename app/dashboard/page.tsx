@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, Award, Clock, ChevronRight } from "lucide-react"
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export default async function DashboardPage() {
@@ -58,7 +58,10 @@ export default async function DashboardPage() {
 
   let clubs: any[] = [];
   try {
-    const res = await fetch("/api/get-clubs", {
+    const host = headers().get("host");
+    const protocol = host?.includes("localhost") ? "http" : "https";
+    const baseUrl = `${protocol}://${host}`;
+    const res = await fetch(`${baseUrl}/api/get-clubs`, {
       cache: "no-store",
     });
     clubs = await res.json();
