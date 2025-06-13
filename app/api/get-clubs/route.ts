@@ -17,12 +17,15 @@ export async function GET() {
     });
 
     if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Fetch failed", res.status, errorText);
       return NextResponse.json({ error: "Failed to fetch clubs" }, { status: res.status });
     }
 
     const data = await res.json();
     return NextResponse.json(data.clubs);
   } catch (err) {
+    console.error("Internal error", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
