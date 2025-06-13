@@ -8,33 +8,30 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  slackId   String   @unique
-  name      String?
-  email     String?  @unique
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-
-  club Club? @relation("UserClub")
-  userWorkshops UserWorkshop[]
+  id             Int            @id @default(autoincrement())
+  slackId        String         @unique
+  name           String?
+  email          String?        @unique
+  avatar         String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @default(now())
+  club           Club?          @relation("UserClub")
+  userWorkshops  UserWorkshop[]
 }
 
 model Club {
   id       Int    @id @default(autoincrement())
   name     String
-  clubCode String @unique
-
-  userId Int  @unique
-  user   User @relation("UserClub", fields: [userId], references: [id])
-
+  hcId     Int    @unique
+  userId   Int    @unique
+  user     User   @relation("UserClub", fields: [userId], references: [id])
 }
 
 model Workshop {
-  id             Int       @id @default(autoincrement())
+  id             Int            @id @default(autoincrement())
   title          String
   description    String
-  clubCode       String
+  hcId           Int
   emoji          String?
   userWorkshops  UserWorkshop[]
 }
@@ -46,9 +43,9 @@ model UserWorkshop {
   completed      Boolean   @default(false)
   submissionDate DateTime?
   eventCode      String?
-  
+
   user           User      @relation(fields: [userId], references: [id])
   workshop       Workshop  @relation(fields: [workshopId], references: [id])
-  
+
   @@unique([userId, workshopId])
 }
