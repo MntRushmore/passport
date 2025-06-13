@@ -64,7 +64,15 @@ export default async function DashboardPage() {
     const res = await fetch(`${baseUrl}/api/get-clubs`, {
       cache: "no-store",
     });
-    clubs = await res.json();
+
+    const text = await res.text();
+
+    try {
+      clubs = JSON.parse(text);
+    } catch (jsonError) {
+      console.error("Not valid JSON, response was:", text);
+      throw new Error("Invalid JSON returned from /api/get-clubs");
+    }
   } catch (e) {
     console.error("Failed to fetch clubs from API", e);
   }
