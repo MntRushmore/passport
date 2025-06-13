@@ -63,27 +63,25 @@ export default async function DashboardPage() {
 
   const showCreateClubPopup = !user.club?.name || !user.club?.clubCode;
 
-  let clubs: any[] = [];
-  try {
-    const headersList = headers();
-    const host = headersList.get("host");
-    const proto = headersList.get("x-forwarded-proto") || "https";
-    const baseUrl = `${proto}://${host}`;
-    const res = await fetch(`${baseUrl}/api/get-clubs`, {
-      cache: "no-store",
-    });
+let clubs: any[] = [];
+try {
+  const headersList = headers();
+  const host = headersList.get("host");
+  const proto = headersList.get("x-forwarded-proto") || "https";
+  const baseUrl = `${proto}://${host}`;
+  const res = await fetch(`${baseUrl}/api/get-clubs`, {
+    cache: "no-store",
+  });
 
-    const text = await res.text();
+  const text = await res.text();
+  clubs = JSON.parse(text);
 
-    try {
-      clubs = JSON.parse(text);
-    } catch (jsonError) {
-      console.error("Not valid JSON, response was:", text);
-      throw new Error("Invalid JSON returned from /api/get-clubs");
-    }
-  } catch (e) {
-    console.error("Failed to fetch clubs from API", e);
-  }
+  if (!Array.isArray(clubs)) throw new Error("Clubs is not an array");
+
+} catch (e) {
+  console.error("Failed to fetch clubs from API", e);
+  clubs = []; // fallback so map doesn't crash
+}
 
   if (showCreateClubPopup) {
     // still render the page, just with the popup
@@ -122,7 +120,7 @@ export default async function DashboardPage() {
                 className="p-2 rounded border border-stone-300 font-mono text-sm text-navy-700"
               >
                 <option value="">Select your club...</option>
-                {clubs.map((club) => (
+                {Array.isArray(clubs) && clubs.map((club) => (
                   <option key={club.code} value={club.code}>
                     {club.name} ({club.city})
                   </option>
