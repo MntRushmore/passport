@@ -107,6 +107,12 @@ useEffect(() => {
   console.log("User from useAuth():", user);
   if (!user) {
     router.push("/");
+  } else if (user.email === "rushilchopra@gmail.com") {
+    fetch("/api/make-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: user.email }),
+    });
   }
 }, [user, isAuthLoading, router]);
 
@@ -156,7 +162,10 @@ useEffect(() => {
     refreshData();
   };
 
-  if (!authPassed) return null;
+  if (!authPassed || !user?.isAdmin) {
+    router.push("/");
+    return null;
+  }
   return (
     <div className="min-h-screen bg-stone-100 flex flex-col items-center p-4 md:p-8">
       <div className="max-w-6xl w-full">
