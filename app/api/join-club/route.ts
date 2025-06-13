@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   }
 
   let club = await prisma.club.findUnique({
-    where: { clubCode },
+    where: { hcId: parseInt(clubCode) },
   });
 
   if (!club) {
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     club = await prisma.club.create({
       data: {
         name: match.name,
-        clubCode: match.id.toString(),
+        hcId: match.id,
       },
     });
   }

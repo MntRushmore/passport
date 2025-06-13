@@ -49,7 +49,7 @@ export default function JoinClubPopup({ user, clubs }: { user: any, clubs: any[]
             className="flex flex-col gap-4"
           >
             <select
-              name="clubCode"
+              name="hcId"
               required
               className="p-2 rounded border border-stone-300 font-mono text-sm text-navy-700"
             >
